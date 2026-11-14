@@ -1,5 +1,5 @@
 {
-  "name": "easyui-vue",
+  "name": "easyui-vue-port",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -21,6 +21,5 @@
     "typescript": "^5.7.0",
     "vite": "^7.0.0",
     "vue-tsc": "^2.2.0"
-  },
-  "description": "Open-source Vue 3 animated UI components \u2014 Vue port of EasyUI (Tailwind CSS + Motion for Vue)"
+  }
 }

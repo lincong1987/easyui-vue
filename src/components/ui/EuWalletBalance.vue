@@ -1,11 +1,44 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { motion } from 'motion-v';
 import { motionTransitions } from '../../lib/motion-tokens';
 import { EyeIcon, EyeOffIcon } from '../../lib/icons';
+import { useLocale } from '../../i18n/useLocale';
 import { cn } from '../../lib/utils';
 
 const props = defineProps<{ class?: string }>();
+
+const DATA: Record<
+  'en' | 'zh-CN',
+  {
+    pouch: string;
+    mask: string;
+    reveal: string;
+    hideAria: string;
+    revealAria: string;
+    caption: string;
+  }
+> = {
+  en: {
+    pouch: 'Leather pouch',
+    mask: 'Mask',
+    reveal: 'Reveal',
+    hideAria: 'Hide balances',
+    revealAria: 'Reveal balances',
+    caption: 'tap a card to focus · eye masks with blur-crossfade',
+  },
+  'zh-CN': {
+    pouch: '皮革卡包',
+    mask: '隐藏',
+    reveal: '显示',
+    hideAria: '隐藏余额',
+    revealAria: '显示余额',
+    caption: '点按卡片切换焦点 · 眼睛图标以模糊交叉淡入隐藏金额',
+  },
+};
+
+const { locale } = useLocale();
+const T = computed(() => DATA[locale.value]);
 
 const CARDS = [
   { brand: 'Mastercard', last4: '3040', balance: 4566.0, tint: 'from-blue-900 to-indigo-950' },
@@ -25,15 +58,15 @@ function money(value: number): string {
   <div :class="cn('w-full max-w-sm', props.class)">
     <div class="relative rounded-3xl border border-line bg-gradient-to-b from-amber-950/80 to-stone-950 p-5 shadow-xl">
       <div class="flex items-center justify-between">
-        <p class="text-xs uppercase tracking-widest text-amber-200/60">Leather pouch</p>
+        <p class="text-xs uppercase tracking-widest text-amber-200/60">{{ T.pouch }}</p>
         <button
-          :aria-label="revealed ? 'Hide balances' : 'Reveal balances'"
+          :aria-label="revealed ? T.hideAria : T.revealAria"
           class="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-[11px] font-medium text-amber-100 transition-colors hover:bg-white/20"
           @click="revealed = !revealed"
         >
           <EyeOffIcon v-if="revealed" :size="12" />
           <EyeIcon v-else :size="12" />
-          {{ revealed ? 'Mask' : 'Reveal' }}
+          {{ revealed ? T.mask : T.reveal }}
         </button>
       </div>
 
@@ -70,6 +103,6 @@ function money(value: number): string {
         </motion.button>
       </div>
     </div>
-    <p class="mt-2 text-center text-[10px] text-muted">tap a card to focus · eye masks with blur-crossfade</p>
+    <p class="mt-2 text-center text-[10px] text-muted">{{ T.caption }}</p>
   </div>
 </template>

@@ -2,26 +2,59 @@
 import { computed, onUnmounted, ref } from 'vue';
 import { AnimatePresence, motion } from 'motion-v';
 import { cn } from '../../lib/utils';
+import { useLocale } from '../../i18n/useLocale';
 
 const props = defineProps<{
   class?: string;
 }>();
 
-const LINES = [
-  'EASYUI PRO — ANNUAL',
-  '--------------------------------',
-  '1x Component license   $49.00',
-  '1x Motion review       $0.00',
-  '1x Sponsor bump        $0.00',
-  '--------------------------------',
-  'TOTAL                  $49.00',
-  'PAID · VISA ****3040',
-];
+const { locale } = useLocale();
+
+const DATA: Record<'en' | 'zh-CN', {
+  lines: string[];
+  printing: string;
+  reprint: string;
+  print: string;
+}> = {
+  en: {
+    lines: [
+      'EASYUI PRO — ANNUAL',
+      '--------------------------------',
+      '1x Component license   $49.00',
+      '1x Motion review       $0.00',
+      '1x Sponsor bump        $0.00',
+      '--------------------------------',
+      'TOTAL                  $49.00',
+      'PAID · VISA ****3040',
+    ],
+    printing: 'printing…',
+    reprint: 'reprint receipt',
+    print: 'print receipt',
+  },
+  'zh-CN': {
+    lines: [
+      'EASYUI PRO — 年度订阅',
+      '--------------------------------',
+      '1x 组件授权            $49.00',
+      '1x 动效评审            $0.00',
+      '1x 赞助位              $0.00',
+      '--------------------------------',
+      '合计                   $49.00',
+      '已支付 · VISA ****3040',
+    ],
+    printing: '打印中…',
+    reprint: '重新打印小票',
+    print: '打印小票',
+  },
+};
+
+const copy = computed(() => DATA[locale.value]);
+const lines = computed(() => copy.value.lines);
 
 const printed = ref(0);
 const printing = ref(false);
 const label = computed(() =>
-  printing.value ? 'printing…' : printed.value === LINES.length ? 'reprint receipt' : 'print receipt',
+  printing.value ? copy.value.printing : printed.value === lines.value.length ? copy.value.reprint : copy.value.print,
 );
 
 let timer: number | undefined;
@@ -35,7 +68,7 @@ function run() {
   timer = window.setInterval(() => {
     i += 1;
     printed.value = i;
-    if (i >= LINES.length) {
+    if (i >= lines.value.length) {
       window.clearInterval(timer);
       timer = undefined;
       printing.value = false;
@@ -74,7 +107,7 @@ onUnmounted(() => window.clearInterval(timer));
             class="mt-0 rounded-b-lg bg-[#fbfbf6] px-3.5 py-3 font-mono text-[10px] leading-relaxed text-stone-700 shadow-[0_14px_30px_rgba(0,0,0,0.18)]"
           >
             <motion.p
-              v-for="(l, i) in LINES.slice(0, printed)"
+              v-for="(l, i) in lines.slice(0, printed)"
               :key="i"
               :initial="{ opacity: 0, y: -4 }"
               :animate="{ opacity: 1, y: 0 }"
@@ -83,7 +116,7 @@ onUnmounted(() => window.clearInterval(timer));
             >
               {{ l }}
             </motion.p>
-            <p v-if="printed < LINES.length" class="animate-pulse">...</p>
+            <p v-if="printed < lines.length" class="animate-pulse">...</p>
           </motion.div>
         </AnimatePresence>
       </div>

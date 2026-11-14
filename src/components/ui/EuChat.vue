@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { onUnmounted, ref } from 'vue';
+import { computed, onUnmounted, ref, watch } from 'vue';
 import { AnimatePresence, motion } from 'motion-v';
+import { useLocale } from '../../i18n/useLocale';
 import { motionTransitions } from '../../lib/motion-tokens';
 import { SendIcon } from '../../lib/icons';
 import { cn } from '../../lib/utils';
@@ -17,20 +18,68 @@ interface Msg {
   status?: 'sent' | 'delivered' | 'read';
 }
 
-const SEED: Msg[] = [
-  { id: 1, from: 'them', text: 'Hey! Is the EasyUI port alive?', time: '09:41' },
-  { id: 2, from: 'me', text: 'Yes — 66 components implemented so far.', time: '09:41', status: 'read' },
-  { id: 3, from: 'them', text: 'Nice. Does the donut chart animate?', time: '09:42' },
-];
+const DATA: Record<
+  'en' | 'zh-CN',
+  {
+    seed: Msg[];
+    replies: string[];
+    typing: string;
+    online: string;
+    placeholder: string;
+    messageAria: string;
+    sendAria: string;
+  }
+> = {
+  en: {
+    seed: [
+      { id: 1, from: 'them', text: 'Hey! Is the EasyUI port alive?', time: '09:41' },
+      { id: 2, from: 'me', text: 'Yes — 66 components implemented so far.', time: '09:41', status: 'read' },
+      { id: 3, from: 'them', text: 'Nice. Does the donut chart animate?', time: '09:42' },
+    ],
+    replies: [
+      'Perfect, checking it now.',
+      'The springs feel great.',
+      'Can you add the heatmap next?',
+      'Ship it 🚀',
+    ],
+    typing: 'typing…',
+    online: 'online',
+    placeholder: 'Message…',
+    messageAria: 'Message',
+    sendAria: 'Send message',
+  },
+  'zh-CN': {
+    seed: [
+      { id: 1, from: 'them', text: '嘿！EasyUI 的移植版还在做吗？', time: '09:41' },
+      { id: 2, from: 'me', text: '在的 —— 目前已经实现了 66 个组件。', time: '09:41', status: 'read' },
+      { id: 3, from: 'them', text: '不错。环形图的动效做了吗？', time: '09:42' },
+    ],
+    replies: [
+      '好，我这就去看看。',
+      '弹簧动效手感很好。',
+      '下一步能加上热力图吗？',
+      '发版吧 🚀',
+    ],
+    typing: '正在输入…',
+    online: '在线',
+    placeholder: '输入消息…',
+    messageAria: '消息',
+    sendAria: '发送消息',
+  },
+};
 
-const REPLIES = [
-  'Perfect, checking it now.',
-  'The springs feel great.',
-  'Can you add the heatmap next?',
-  'Ship it 🚀',
-];
+const { locale } = useLocale();
+const ui = computed(() => DATA[locale.value]);
 
-const msgs = ref<Msg[]>([...SEED]);
+const msgs = ref<Msg[]>(DATA[locale.value].seed.map((m) => ({ ...m })));
+
+watch(locale, () => {
+  msgs.value = msgs.value.map((m) => {
+    const seed = DATA[locale.value].seed.find((s) => s.id === m.id);
+    return seed ? { ...m, text: seed.text } : m;
+  });
+});
+
 const draft = ref('');
 const typing = ref(false);
 const idRef = ref(100);
@@ -52,9 +101,10 @@ function send() {
   const timer = window.setTimeout(() => {
     timers.delete(timer);
     typing.value = false;
+    const replies = DATA[locale.value].replies;
     msgs.value = [
       ...msgs.value.map((x) => (x.id === id ? { ...x, status: 'read' as const } : x)),
-      { id: nextId(), from: 'them', text: REPLIES[id % REPLIES.length], time },
+      { id: nextId(), from: 'them', text: replies[id % replies.length], time },
     ];
   }, 1400);
   timers.add(timer);
@@ -90,7 +140,7 @@ onUnmounted(() => {
       <span class="flex h-8 w-8 items-center justify-center rounded-full bg-fg text-[11px] font-bold text-bg">EU</span>
       <div>
         <p class="text-sm font-medium leading-tight">EasyUI Team</p>
-        <p class="text-[11px] text-emerald-600 dark:text-emerald-400">{{ typing ? 'typing…' : 'online' }}</p>
+        <p class="text-[11px] text-emerald-600 dark:text-emerald-400">{{ typing ? ui.typing : ui.online }}</p>
       </div>
     </div>
 
@@ -150,14 +200,14 @@ onUnmounted(() => {
       <textarea
         :value="draft"
         rows="1"
-        placeholder="Message…"
-        aria-label="Message"
+        :placeholder="ui.placeholder"
+        :aria-label="ui.messageAria"
         class="max-h-24 min-h-10 flex-1 resize-none rounded-xl border border-line bg-transparent px-3 py-2.5 text-sm outline-none transition-colors placeholder:text-muted/70 focus:border-fg"
         @input="onInput"
         @keydown="onKeydown"
       />
       <button
-        aria-label="Send message"
+        :aria-label="ui.sendAria"
         class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-fg text-bg transition-transform active:scale-95"
         @click="send"
       >

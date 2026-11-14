@@ -1,11 +1,39 @@
 <script setup lang="ts">
-import { onUnmounted, ref } from 'vue';
+import { computed, onUnmounted, ref } from 'vue';
 import { AnimatePresence, motion } from 'motion-v';
 import { motionTransitions } from '../../lib/motion-tokens';
 import { CheckIcon, XIcon } from '../../lib/icons';
 import { cn } from '../../lib/utils';
+import { useLocale } from '../../i18n/useLocale';
 
 const props = defineProps<{ class?: string }>();
+
+const { locale } = useLocale();
+
+const DATA: Record<'en' | 'zh-CN', {
+  release: string;
+  drag: string;
+  or: string;
+  browse: string;
+  remove: string;
+}> = {
+  en: {
+    release: 'Release to drop',
+    drag: 'Drag files here',
+    or: 'or',
+    browse: 'Browse files',
+    remove: 'Remove',
+  },
+  'zh-CN': {
+    release: '松开即可上传',
+    drag: '将文件拖到此处',
+    or: '或',
+    browse: '浏览文件',
+    remove: '移除',
+  },
+};
+
+const copy = computed(() => DATA[locale.value]);
 
 interface UploadItem {
   id: number;
@@ -74,11 +102,11 @@ onUnmounted(() => {
       @drop.prevent="onDrop"
     >
       <motion.p :animate="{ y: dragging ? -4 : 0 }" :transition="motionTransitions.springSnappy" class="text-sm font-medium">
-        {{ dragging ? 'Release to drop' : 'Drag files here' }}
+        {{ dragging ? copy.release : copy.drag }}
       </motion.p>
-      <p class="mt-1 text-xs text-muted">or</p>
+      <p class="mt-1 text-xs text-muted">{{ copy.or }}</p>
       <label class="mt-2 inline-block cursor-pointer rounded-full border border-line px-3.5 py-1.5 text-xs font-medium transition-colors hover:bg-card">
-        Browse files
+        {{ copy.browse }}
         <input type="file" multiple class="sr-only" @change="onPick" />
       </label>
     </div>
@@ -119,7 +147,7 @@ onUnmounted(() => {
             </div>
             <span class="shrink-0 text-[10px] text-muted tabular-nums">{{ it.size }}</span>
             <button
-              :aria-label="`Remove ${it.name}`"
+              :aria-label="`${copy.remove} ${it.name}`"
               class="shrink-0 rounded-full p-1 text-muted transition-colors hover:bg-card hover:text-fg"
               @click="remove(it.id)"
             >

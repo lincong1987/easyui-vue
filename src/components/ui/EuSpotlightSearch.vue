@@ -3,20 +3,65 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { AnimatePresence, motion } from 'motion-v';
 import { motionTransitions } from '../../lib/motion-tokens';
 import { SearchIcon } from '../../lib/icons';
+import { useLocale } from '../../i18n/useLocale';
 import { cn } from '../../lib/utils';
 
 const props = defineProps<{ class?: string }>();
 
-const DOCS = [
-  { title: 'Quick start', path: 'docs/quick-start' },
-  { title: 'Registry architecture', path: 'docs/architecture' },
-  { title: 'Animated Number Morph', path: 'components/animated-number' },
-  { title: 'Wallet Card', path: 'components/wallet-card' },
-  { title: 'Command Menu', path: 'components/command-menu' },
-  { title: 'Spotlight Card', path: 'components/spotlight-card' },
-  { title: 'Donut Chart', path: 'components/donut-chart' },
-  { title: 'LLMs index', path: 'llms.txt' },
-];
+interface Doc {
+  title: string;
+  path: string;
+}
+
+const DATA: Record<
+  'en' | 'zh-CN',
+  {
+    trigger: string;
+    placeholder: string;
+    dialogAria: string;
+    inputAria: string;
+    empty: string;
+    docs: Doc[];
+  }
+> = {
+  en: {
+    trigger: 'Search docs & components…',
+    placeholder: 'Search…',
+    dialogAria: 'Search',
+    inputAria: 'Search query',
+    empty: 'Nothing matches “{query}”.',
+    docs: [
+      { title: 'Quick start', path: 'docs/quick-start' },
+      { title: 'Registry architecture', path: 'docs/architecture' },
+      { title: 'Animated Number Morph', path: 'components/animated-number' },
+      { title: 'Wallet Card', path: 'components/wallet-card' },
+      { title: 'Command Menu', path: 'components/command-menu' },
+      { title: 'Spotlight Card', path: 'components/spotlight-card' },
+      { title: 'Donut Chart', path: 'components/donut-chart' },
+      { title: 'LLMs index', path: 'llms.txt' },
+    ],
+  },
+  'zh-CN': {
+    trigger: '搜索文档与组件…',
+    placeholder: '搜索…',
+    dialogAria: '搜索',
+    inputAria: '搜索关键词',
+    empty: '没有与“{query}”匹配的内容。',
+    docs: [
+      { title: '快速开始', path: 'docs/quick-start' },
+      { title: '注册表架构', path: 'docs/architecture' },
+      { title: 'Animated Number Morph', path: 'components/animated-number' },
+      { title: 'Wallet Card', path: 'components/wallet-card' },
+      { title: 'Command Menu', path: 'components/command-menu' },
+      { title: 'Spotlight Card', path: 'components/spotlight-card' },
+      { title: 'Donut Chart', path: 'components/donut-chart' },
+      { title: 'LLMs 索引', path: 'llms.txt' },
+    ],
+  },
+};
+
+const { locale } = useLocale();
+const T = computed(() => DATA[locale.value]);
 
 const open = ref(false);
 const query = ref('');
@@ -25,8 +70,8 @@ const inputRef = ref<HTMLInputElement | null>(null);
 
 const results = computed(() => {
   const q = query.value.trim().toLowerCase();
-  if (!q) return DOCS;
-  return DOCS.filter((d) => `${d.title} ${d.path}`.toLowerCase().includes(q));
+  if (!q) return T.value.docs;
+  return T.value.docs.filter((d) => `${d.title} ${d.path}`.toLowerCase().includes(q));
 });
 
 watch(query, () => {
@@ -69,7 +114,7 @@ function onKeyDown(e: KeyboardEvent) {
       @click="open = true"
     >
       <SearchIcon :size="15" />
-      <span class="flex-1 text-left">Search docs &amp; components…</span>
+      <span class="flex-1 text-left">{{ T.trigger }}</span>
       <kbd class="rounded border border-line bg-card px-1.5 py-0.5 text-[10px]">⌘K</kbd>
     </button>
 
@@ -90,7 +135,7 @@ function onKeyDown(e: KeyboardEvent) {
           :transition="motionTransitions.springSnappy"
           role="dialog"
           aria-modal="true"
-          aria-label="Search"
+          :aria-label="T.dialogAria"
           class="relative z-10 w-full max-w-lg overflow-hidden rounded-2xl border border-line bg-surface shadow-2xl"
         >
           <div class="flex items-center gap-2.5 border-b border-line px-4">
@@ -98,8 +143,8 @@ function onKeyDown(e: KeyboardEvent) {
             <input
               ref="inputRef"
               v-model="query"
-              placeholder="Search…"
-              aria-label="Search query"
+              :placeholder="T.placeholder"
+              :aria-label="T.inputAria"
               class="w-full bg-transparent py-3.5 text-sm outline-none placeholder:text-muted/70"
               @keydown="onKeyDown"
             />
@@ -127,7 +172,7 @@ function onKeyDown(e: KeyboardEvent) {
               </button>
             </li>
             <li v-if="results.length === 0" class="px-3 py-8 text-center text-sm text-muted">
-              Nothing matches “{{ query }}”.
+              {{ T.empty.replace('{query}', query) }}
             </li>
           </ul>
         </motion.div>

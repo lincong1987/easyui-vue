@@ -1,10 +1,32 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { motion, useMotionValue, useSpring, type PanInfo } from 'motion-v';
 import { motionTransitions } from '../../lib/motion-tokens';
 import { cn } from '../../lib/utils';
+import { useLocale } from '../../i18n/useLocale';
 
 const props = defineProps<{ class?: string }>();
+
+const { locale } = useLocale();
+
+const DATA: Record<'en' | 'zh-CN', {
+  drag: string;
+  deleted: string;
+  undo: string;
+}> = {
+  en: {
+    drag: 'Drag to delete account →',
+    deleted: 'Account deleted — unrecoverable',
+    undo: 'undo (demo reset)',
+  },
+  'zh-CN': {
+    drag: '拖动以删除账号 →',
+    deleted: '账号已删除 —— 无法恢复',
+    undo: '撤销（演示重置）',
+  },
+};
+
+const copy = computed(() => DATA[locale.value]);
 
 const TRAVEL = 148;
 
@@ -52,12 +74,12 @@ function undo() {
             done ? 'text-white' : 'text-muted',
           )
         "
-      >{{ done ? 'Account deleted — unrecoverable' : 'Drag to delete account →' }}</p>
+      >{{ done ? copy.deleted : copy.drag }}</p>
     </div>
     <button
       v-if="done"
       class="mx-auto block rounded-full border border-line px-3.5 py-1.5 text-xs font-medium text-muted transition-colors hover:text-fg"
       @click="undo"
-    >undo (demo reset)</button>
+    >{{ copy.undo }}</button>
   </div>
 </template>

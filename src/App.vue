@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { provideTheme } from './theme/useTheme';
+import { provideLocale } from './i18n/useLocale';
 import { useHashRoute } from './composables/useHashRoute';
 import SiteChrome from './site/SiteChrome.vue';
+import SiteFooter from './site/SiteFooter.vue';
 import HomePage from './site/HomePage.vue';
 import ComponentsPage from './site/ComponentsPage.vue';
 import DetailPage from './site/DetailPage.vue';
 import LlmsPage from './site/LlmsPage.vue';
 
 provideTheme();
+provideLocale();
 const { route } = useHashRoute();
 
 const view = computed(() => {
@@ -30,16 +33,7 @@ const view = computed(() => {
       <LlmsPage v-else-if="view.name === 'llms'" />
       <HomePage v-else />
     </div>
-    <footer class="border-t border-line/60 py-10 text-center text-sm text-muted">
-      <p class="font-medium text-fg">Open-source, thoughtful components for modern React interfaces</p>
-      <p class="mt-2">
-        Vue 3 port of
-        <a class="underline decoration-line underline-offset-4 hover:text-fg" href="https://easyui.site" target="_blank" rel="noreferrer">easyui.site</a>
-        ·
-        <a class="underline decoration-line underline-offset-4 hover:text-fg" href="https://github.com/Surajmaurya1/easyui" target="_blank" rel="noreferrer">upstream repository</a>
-        · MIT
-      </p>
-    </footer>
+    <SiteFooter />
   </div>
 </template>
 

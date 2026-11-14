@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import { AnimatePresence, motion } from 'motion-v';
 import { motionTransitions } from '../lib/motion-tokens';
 import { CATALOG, daysSince } from '../lib/catalog';
+import { useLocale } from '../i18n/useLocale';
 import { SearchIcon } from '../lib/icons';
 import ComponentPreview from './ComponentPreview.vue';
 import { cn } from '../lib/utils';
@@ -11,17 +12,19 @@ const TABS = ['All', 'Recent', 'Motion', 'Buttons', 'Navigation', 'Feedback', 'O
 type Tab = (typeof TABS)[number];
 const PER_PAGE = 10;
 
+const { t } = useLocale();
+
 const tab = ref<Tab>('All');
 const query = ref('');
 const page = ref(1);
 
 const counts = computed<Record<string, number>>(() => {
   const c: Record<string, number> = { All: CATALOG.length };
-  for (const t of TABS.slice(1)) {
-    c[t] =
-      t === 'Recent'
+  for (const t2 of TABS.slice(1)) {
+    c[t2] =
+      t2 === 'Recent'
         ? CATALOG.filter((x) => daysSince(x.createdAt) <= 30).length
-        : CATALOG.filter((x) => x.category === t).length;
+        : CATALOG.filter((x) => x.category === t2).length;
   }
   return c;
 });
@@ -33,7 +36,11 @@ const filtered = computed(() => {
   const q = query.value.trim().toLowerCase();
   if (q) {
     list = list.filter(
-      (x) => x.title.toLowerCase().includes(q) || x.description.toLowerCase().includes(q) || x.slug.includes(q),
+      (x) =>
+        x.title.toLowerCase().includes(q) ||
+        x.description.toLowerCase().includes(q) ||
+        x.descriptionZh.toLowerCase().includes(q) ||
+        x.slug.includes(q),
     );
   }
   return list;
@@ -43,44 +50,59 @@ const pages = computed(() => Math.max(1, Math.ceil(filtered.value.length / PER_P
 const safePage = computed(() => Math.min(page.value, pages.value));
 const visible = computed(() => filtered.value.slice((safePage.value - 1) * PER_PAGE, safePage.value * PER_PAGE));
 
-function pick(t: Tab) {
-  tab.value = t;
+const resultsLine = computed(() =>
+  t.value.directory.results
+    .replace('{count}', String(filtered.value.length))
+    .replace('{suffix}', filtered.value.length === 1 ? '' : 's')
+    .replace('{page}', String(safePage.value))
+    .replace('{pages}', String(pages.value)),
+);
+
+const emptyLine = computed(() =>
+  t.value.directory.empty.replace('{query}', query.value).replace('{tab}', t.value.directory.tabs[tab.value]),
+);
+
+function tabLabel(t2: Tab): string {
+  return t.value.directory.tabs[t2];
+}
+
+function pick(t2: Tab) {
+  tab.value = t2;
   page.value = 1;
 }
 </script>
 
 <template>
   <main class="mx-auto max-w-6xl px-5 pb-16 pt-12">
-    <p class="text-xs font-medium uppercase tracking-[0.2em] text-muted">Directory</p>
+    <p class="text-xs font-medium uppercase tracking-[0.2em] text-muted">{{ t.directory.eyebrow }}</p>
     <h1 class="mt-2 text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">
-      Vue Component Library
+      {{ t.directory.title1 }}
       <br />
-      with Copy Paste UI
+      {{ t.directory.title2 }}
     </h1>
     <p class="mt-3 max-w-xl text-sm leading-relaxed text-muted">
-      {{ CATALOG.length }} components to explore. Copy accessible, typed Vue 3 UI into your project.
-      Browse live demos, review Tailwind styles, and install only what you need.
+      {{ t.directory.intro.replace('{count}', String(CATALOG.length)) }}
     </p>
 
     <div class="mt-8 flex flex-col gap-4">
       <div class="flex flex-wrap items-center gap-1.5">
         <button
-          v-for="t in TABS"
-          :key="t"
+          v-for="t2 in TABS"
+          :key="t2"
           :class="cn(
             'relative rounded-full px-3.5 py-1.5 text-sm transition-colors',
-            tab === t ? 'text-bg' : 'text-muted hover:text-fg',
+            tab === t2 ? 'text-bg' : 'text-muted hover:text-fg',
           )"
-          @click="pick(t)"
+          @click="pick(t2)"
         >
           <motion.span
-            v-if="tab === t"
+            v-if="tab === t2"
             layout-id="components-tab-pill"
             :transition="motionTransitions.springMorph"
             class="absolute inset-0 rounded-full bg-fg"
           />
           <span class="relative z-10">
-            {{ t }} <span :class="cn('tabular-nums', tab === t ? 'opacity-70' : 'opacity-50')">{{ counts[t] }}</span>
+            {{ tabLabel(t2) }} <span :class="cn('tabular-nums', tab === t2 ? 'opacity-70' : 'opacity-50')">{{ counts[t2] }}</span>
           </span>
         </button>
       </div>
@@ -89,17 +111,15 @@ function pick(t: Tab) {
         <SearchIcon :size="15" class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
         <input
           v-model="query"
-          placeholder="Search components…"
-          aria-label="Search components"
+          :placeholder="t.directory.searchPlaceholder"
+          :aria-label="t.directory.searchAria"
           class="w-full rounded-full border border-line bg-surface py-2.5 pl-10 pr-4 text-sm outline-none transition-colors placeholder:text-muted/70 hover:border-fg/40 focus:border-fg"
           @input="page = 1"
         />
       </div>
     </div>
 
-    <p class="mt-6 text-xs text-muted" aria-live="polite">
-      {{ filtered.length }} result{{ filtered.length === 1 ? '' : 's' }} · page {{ safePage }} of {{ pages }}
-    </p>
+    <p class="mt-6 text-xs text-muted" aria-live="polite">{{ resultsLine }}</p>
 
     <motion.div layout class="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
       <AnimatePresence>
@@ -118,7 +138,7 @@ function pick(t: Tab) {
     </motion.div>
 
     <div v-if="filtered.length === 0" class="rounded-2xl border border-dashed border-line py-16 text-center text-sm text-muted">
-      No components match “{{ query }}” in {{ tab }}.
+      {{ emptyLine }}
     </div>
 
     <div v-if="pages > 1" class="mt-8 flex items-center justify-center gap-1.5">

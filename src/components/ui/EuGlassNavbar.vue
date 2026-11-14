@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { motion } from 'motion-v';
+import { useLocale } from '../../i18n/useLocale';
 import { motionTransitions } from '../../lib/motion-tokens';
 import { MenuIcon, MoonIcon, SearchIcon, SunIcon } from '../../lib/icons';
 import { useTheme } from '../../theme/useTheme';
@@ -8,14 +9,37 @@ import { cn } from '../../lib/utils';
 
 const props = defineProps<{ class?: string }>();
 
-const LINKS = ['Home', 'Components', 'Docs', 'Sponsors'];
+const { locale } = useLocale();
 
-const active = ref('Home');
+const DATA: Record<
+  'en' | 'zh-CN',
+  { links: string[]; search: string; toLight: string; toDark: string; menu: string }
+> = {
+  en: {
+    links: ['Home', 'Components', 'Docs', 'Sponsors'],
+    search: 'Search',
+    toLight: 'Switch to light theme',
+    toDark: 'Switch to dark theme',
+    menu: 'Menu',
+  },
+  'zh-CN': {
+    links: ['首页', '组件', '文档', '赞助'],
+    search: '搜索',
+    toLight: '切换到浅色主题',
+    toDark: '切换到深色主题',
+    menu: '菜单',
+  },
+};
+
+const d = computed(() => DATA[locale.value]);
+const links = computed(() => d.value.links);
+
+const active = ref(0);
 const open = ref(false);
 const { theme, toggle } = useTheme();
 
-function pick(link: string) {
-  active.value = link;
+function pick(index: number) {
+  active.value = index;
   open.value = false;
 }
 </script>
@@ -31,16 +55,16 @@ function pick(link: string) {
       <div class="flex items-center gap-1">
         <span class="mr-2 flex h-7 w-7 items-center justify-center rounded-lg bg-fg text-[11px] font-bold text-bg">eu</span>
         <button
-          v-for="link in LINKS"
-          :key="link"
+          v-for="(link, i) in links"
+          :key="i"
           :class="cn(
             'relative hidden rounded-full px-3 py-1.5 text-sm transition-colors sm:block',
-            active === link ? 'text-fg' : 'text-muted hover:text-fg',
+            active === i ? 'text-fg' : 'text-muted hover:text-fg',
           )"
-          @click="active = link"
+          @click="active = i"
         >
           <motion.span
-            v-if="active === link"
+            v-if="active === i"
             layout-id="glass-nav-pill"
             :transition="motionTransitions.springMorph"
             class="absolute inset-0 rounded-full bg-fg/[0.06] dark:bg-white/10"
@@ -49,11 +73,11 @@ function pick(link: string) {
         </button>
       </div>
       <div class="flex items-center gap-1">
-        <button aria-label="Search" class="rounded-full p-2 text-muted transition-colors hover:bg-card hover:text-fg">
+        <button :aria-label="d.search" class="rounded-full p-2 text-muted transition-colors hover:bg-card hover:text-fg">
           <SearchIcon :size="16" />
         </button>
         <button
-          :aria-label="theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
+          :aria-label="theme === 'dark' ? d.toLight : d.toDark"
           class="rounded-full p-2 text-muted transition-colors hover:bg-card hover:text-fg"
           @click="toggle"
         >
@@ -61,7 +85,7 @@ function pick(link: string) {
           <MoonIcon v-else :size="16" />
         </button>
         <button
-          aria-label="Menu"
+          :aria-label="d.menu"
           class="rounded-full p-2 text-muted transition-colors hover:bg-card hover:text-fg sm:hidden"
           @click="open = !open"
         >
@@ -77,13 +101,13 @@ function pick(link: string) {
       class="mt-2 rounded-2xl border border-line bg-surface p-2 sm:hidden"
     >
       <button
-        v-for="link in LINKS"
-        :key="link"
+        v-for="(link, i) in links"
+        :key="i"
         :class="cn(
           'block w-full rounded-xl px-3 py-2 text-left text-sm',
-          active === link ? 'bg-card text-fg' : 'text-muted',
+          active === i ? 'bg-card text-fg' : 'text-muted',
         )"
-        @click="pick(link)"
+        @click="pick(i)"
       >
         {{ link }}
       </button>

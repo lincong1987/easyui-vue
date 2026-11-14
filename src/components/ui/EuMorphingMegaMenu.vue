@@ -3,34 +3,82 @@ import { computed, ref } from 'vue';
 import { AnimatePresence, motion } from 'motion-v';
 import { motionTransitions } from '../../lib/motion-tokens';
 import { ChevronDownIcon } from '../../lib/icons';
+import { useLocale } from '../../i18n/useLocale';
 import { cn } from '../../lib/utils';
 
 const props = defineProps<{ class?: string }>();
 
-const MENUS = {
-  Products: {
-    w: 300,
-    items: ['Spotlight Card', 'Wallet Card', 'Animated Number', 'Donut Chart'],
-    note: 'Live-animated components ready to paste in.',
-  },
-  Resources: {
-    w: 240,
-    items: ['Docs', 'Registry JSON', 'llms.txt', 'Changelog'],
-    note: 'Everything an integrator needs.',
-  },
-  Company: {
-    w: 200,
-    items: ['About', 'Sponsors', 'GitHub'],
-    note: 'Built in public since August.',
-  },
-} as const;
+type MenuKey = 'products' | 'resources' | 'company';
 
-type MenuKey = keyof typeof MENUS;
+interface MenuConfig {
+  label: string;
+  w: number;
+  items: string[];
+  note: string;
+}
 
-const MENU_KEYS = Object.keys(MENUS) as MenuKey[];
+const DATA: Record<
+  'en' | 'zh-CN',
+  {
+    menus: Record<MenuKey, MenuConfig>;
+    caption: string;
+  }
+> = {
+  en: {
+    menus: {
+      products: {
+        label: 'Products',
+        w: 300,
+        items: ['Spotlight Card', 'Wallet Card', 'Animated Number', 'Donut Chart'],
+        note: 'Live-animated components ready to paste in.',
+      },
+      resources: {
+        label: 'Resources',
+        w: 240,
+        items: ['Docs', 'Registry JSON', 'llms.txt', 'Changelog'],
+        note: 'Everything an integrator needs.',
+      },
+      company: {
+        label: 'Company',
+        w: 200,
+        items: ['About', 'Sponsors', 'GitHub'],
+        note: 'Built in public since August.',
+      },
+    },
+    caption: 'one morphing panel — width and arrow adapt to the trigger',
+  },
+  'zh-CN': {
+    menus: {
+      products: {
+        label: '产品',
+        w: 300,
+        items: ['Spotlight Card', 'Wallet Card', 'Animated Number', 'Donut Chart'],
+        note: '可实时交互的动效组件，复制即用。',
+      },
+      resources: {
+        label: '资源',
+        w: 240,
+        items: ['文档', 'Registry JSON', 'llms.txt', '更新日志'],
+        note: '集成方需要的一切。',
+      },
+      company: {
+        label: '公司',
+        w: 200,
+        items: ['关于', '赞助商', 'GitHub'],
+        note: '自八月起公开构建。',
+      },
+    },
+    caption: '同一个形变面板——宽度与箭头随触发器自适应',
+  },
+};
+
+const { locale } = useLocale();
+const T = computed(() => DATA[locale.value]);
+
+const MENU_KEYS: MenuKey[] = ['products', 'resources', 'company'];
 
 const open = ref<MenuKey | null>(null);
-const panel = computed(() => (open.value ? MENUS[open.value] : MENUS.Products));
+const panel = computed(() => T.value.menus[open.value ?? 'products']);
 </script>
 
 <template>
@@ -47,7 +95,7 @@ const panel = computed(() => (open.value ? MENUS[open.value] : MENUS.Products));
         @click="open = open === k ? null : k"
         @pointerenter="open = k"
       >
-        {{ k }}
+        {{ T.menus[k].label }}
         <motion.span :animate="{ rotate: open === k ? 180 : 0 }" :transition="motionTransitions.springSnappy">
           <ChevronDownIcon :size="13" />
         </motion.span>
@@ -80,6 +128,6 @@ const panel = computed(() => (open.value ? MENUS[open.value] : MENUS.Products));
         />
       </motion.div>
     </AnimatePresence>
-    <p class="mt-8 text-center text-xs text-muted">one morphing panel — width and arrow adapt to the trigger</p>
+    <p class="mt-8 text-center text-xs text-muted">{{ T.caption }}</p>
   </div>
 </template>

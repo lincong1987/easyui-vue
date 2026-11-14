@@ -1,19 +1,47 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { motion } from 'motion-v';
 import { motionTransitions } from '../../lib/motion-tokens';
 import { CheckIcon } from '../../lib/icons';
+import { useLocale } from '../../i18n/useLocale';
 import { cn } from '../../lib/utils';
 
-const props = withDefaults(
-  defineProps<{
-    steps?: string[];
-    class?: string;
-  }>(),
-  { steps: () => ['Account', 'Profile', 'Billing', 'Done'] },
-);
+const props = defineProps<{
+  steps?: string[];
+  class?: string;
+}>();
+
+const DATA: Record<
+  'en' | 'zh-CN',
+  {
+    steps: string[];
+    stepText: string;
+    body: string;
+  }
+> = {
+  en: {
+    steps: ['Account', 'Profile', 'Billing', 'Done'],
+    stepText: 'Step {n} — {name}',
+    body: 'The connector fills up to the active ring; completed rings show a drawn checkmark. Click a ring to travel.',
+  },
+  'zh-CN': {
+    steps: ['账户', '资料', '账单', '完成'],
+    stepText: '第 {n} 步 — {name}',
+    body: '连接线填充到当前圆环，已完成的圆环显示对勾。点击任意圆环即可跳转。',
+  },
+};
+
+const { locale } = useLocale();
+const T = computed(() => DATA[locale.value]);
+const steps = computed(() => props.steps ?? T.value.steps);
 
 const current = ref(1);
+
+const stepText = computed(() =>
+  T.value.stepText
+    .replace('{n}', String(current.value + 1))
+    .replace('{name}', steps.value[current.value] ?? ''),
+);
 </script>
 
 <template>
@@ -23,11 +51,11 @@ const current = ref(1);
       <motion.div
         class="absolute top-[18px] h-0.5 bg-fg"
         :initial="false"
-        :animate="{ width: `${(current / (props.steps.length - 1)) * 100}%` }"
+        :animate="{ width: `${(current / (steps.length - 1)) * 100}%` }"
         :transition="motionTransitions.springGentle"
       />
       <button
-        v-for="(s, i) in props.steps"
+        v-for="(s, i) in steps"
         :key="s"
         class="relative z-10 flex w-16 flex-col items-center gap-2"
         :aria-current="i === current ? 'step' : undefined"
@@ -57,8 +85,8 @@ const current = ref(1);
         :transition="motionTransitions.springGentle"
         class="text-sm text-muted"
       >
-        <p class="font-medium text-fg">Step {{ current + 1 }} — {{ props.steps[current] }}</p>
-        The connector fills up to the active ring; completed rings show a drawn checkmark. Click a ring to travel.
+        <p class="font-medium text-fg">{{ stepText }}</p>
+        {{ T.body }}
       </motion.div>
     </div>
   </div>

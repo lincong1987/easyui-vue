@@ -1,10 +1,41 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { motion } from 'motion-v';
 import { motionTransitions } from '../../lib/motion-tokens';
 import { ArrowUpRightIcon } from '../../lib/icons';
+import { useLocale } from '../../i18n/useLocale';
 import { cn } from '../../lib/utils';
 
 const props = defineProps<{ class?: string }>();
+
+const DATA: Record<
+  'en' | 'zh-CN',
+  {
+    badge: string;
+    handle: string;
+    bio: string;
+    stats: { stars: string; forks: string; components: string };
+    visit: string;
+  }
+> = {
+  en: {
+    badge: 'Pro · verified ✓',
+    handle: '@easyui_port · Shanghai',
+    bio: 'Rebuilding a beloved motion library, one spring at a time. 66 / 134 components live.',
+    stats: { stars: 'stars', forks: 'forks', components: 'components' },
+    visit: 'Visit site',
+  },
+  'zh-CN': {
+    badge: 'Pro · 已认证 ✓',
+    handle: '@easyui_port · 上海',
+    bio: '一次一根弹簧，重建一套备受喜爱的动效组件库。134 个组件中已有 66 个上线。',
+    stats: { stars: '星标', forks: 'Fork', components: '组件' },
+    visit: '访问网站',
+  },
+};
+
+const { locale } = useLocale();
+const T = computed(() => DATA[locale.value]);
 </script>
 
 <template>
@@ -25,18 +56,18 @@ const props = defineProps<{ class?: string }>();
           EU
         </span>
         <span class="mb-1 flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[10px] text-white/70">
-          Pro · verified ✓
+          {{ T.badge }}
         </span>
       </div>
       <p class="text-base font-semibold tracking-tight">easyui port</p>
-      <p class="text-xs text-white/50">@easyui_port · Shanghai</p>
+      <p class="text-xs text-white/50">{{ T.handle }}</p>
       <p class="mt-2.5 text-sm leading-relaxed text-white/70">
-        Rebuilding a beloved motion library, one spring at a time. 66 / 134 components live.
+        {{ T.bio }}
       </p>
       <div class="mt-3 flex gap-5 text-xs">
-        <span><b class="text-sm">290</b> <span class="text-white/50">stars</span></span>
-        <span><b class="text-sm">20</b> <span class="text-white/50">forks</span></span>
-        <span><b class="text-sm">134</b> <span class="text-white/50">components</span></span>
+        <span><b class="text-sm">290</b> <span class="text-white/50">{{ T.stats.stars }}</span></span>
+        <span><b class="text-sm">20</b> <span class="text-white/50">{{ T.stats.forks }}</span></span>
+        <span><b class="text-sm">134</b> <span class="text-white/50">{{ T.stats.components }}</span></span>
       </div>
       <a
         href="https://easyui.site"
@@ -44,7 +75,7 @@ const props = defineProps<{ class?: string }>();
         rel="noreferrer"
         class="mt-4 flex items-center justify-center gap-1.5 rounded-xl bg-white py-2 text-xs font-semibold text-black transition-transform active:scale-[0.98]"
       >
-        Visit site <ArrowUpRightIcon :size="12" />
+        {{ T.visit }} <ArrowUpRightIcon :size="12" />
       </a>
     </div>
   </motion.div>

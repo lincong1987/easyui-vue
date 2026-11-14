@@ -3,16 +3,49 @@ import { computed, onUnmounted, ref } from 'vue';
 import { AnimatePresence, motion } from 'motion-v';
 import { motionTransitions } from '../../lib/motion-tokens';
 import { SendIcon } from '../../lib/icons';
+import { useLocale } from '../../i18n/useLocale';
 import { cn } from '../../lib/utils';
 
 const props = defineProps<{ class?: string }>();
 
+const DATA: Record<
+  'en' | 'zh-CN',
+  {
+    available: string;
+    send: string;
+    recent: string;
+    sheetTitle: string;
+    txns: { name: string; amount: string; time: string }[];
+  }
+> = {
+  en: {
+    available: 'Available balance',
+    send: 'Send money',
+    recent: 'Recent',
+    sheetTitle: 'Send $25.00 to…',
+    txns: [
+      { name: 'Figma annual', amount: '-$144.00', time: 'Mon' },
+      { name: 'Client payout', amount: '+$2,400.00', time: 'Fri' },
+      { name: 'Server credits', amount: '-$36.00', time: 'Sun' },
+    ],
+  },
+  'zh-CN': {
+    available: '可用余额',
+    send: '转账',
+    recent: '最近',
+    sheetTitle: '转账 $25.00 给…',
+    txns: [
+      { name: 'Figma 年费', amount: '-$144.00', time: '周一' },
+      { name: '客户付款', amount: '+$2,400.00', time: '周五' },
+      { name: '服务器额度', amount: '-$36.00', time: '周日' },
+    ],
+  },
+};
+
+const { locale } = useLocale();
+const T = computed(() => DATA[locale.value]);
+
 const CONTACTS = ['Rin', 'Kai', 'Momo', 'Jin'];
-const TXNS = [
-  { name: 'Figma annual', amount: '-$144.00', time: 'Mon' },
-  { name: 'Client payout', amount: '+$2,400.00', time: 'Fri' },
-  { name: 'Server credits', amount: '-$36.00', time: 'Sun' },
-];
 
 const balance = ref(8420.5);
 const sheet = ref(false);
@@ -41,7 +74,7 @@ onUnmounted(() => {
   <div :class="cn('relative w-full max-w-sm', props.class)">
     <div class="overflow-hidden rounded-3xl border border-line bg-surface shadow-lg">
       <div class="relative bg-gradient-to-br from-indigo-600 via-indigo-500 to-cyan-500 p-5 text-white">
-        <p class="text-xs uppercase tracking-widest text-white/60">Available balance</p>
+        <p class="text-xs uppercase tracking-widest text-white/60">{{ T.available }}</p>
         <p class="mt-1 text-3xl font-semibold tabular-nums tracking-tight">
           {{ formatted }}
         </p>
@@ -49,26 +82,26 @@ onUnmounted(() => {
           class="mt-4 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-semibold text-indigo-700 transition-transform active:scale-95"
           @click="sheet = true"
         >
-          <SendIcon :size="13" /> Send money
+          <SendIcon :size="13" /> {{ T.send }}
         </button>
       </div>
       <div class="p-4">
-        <p class="text-xs font-medium uppercase tracking-widest text-muted">Recent</p>
+        <p class="text-xs font-medium uppercase tracking-widest text-muted">{{ T.recent }}</p>
         <ul class="mt-2 space-y-1.5">
           <li
-            v-for="t in TXNS"
-            :key="t.name"
+            v-for="tx in T.txns"
+            :key="tx.name"
             class="flex items-center justify-between rounded-xl px-2 py-1.5 text-sm transition-colors hover:bg-card"
           >
-            <span class="text-fg">{{ t.name }}</span>
+            <span class="text-fg">{{ tx.name }}</span>
             <span class="text-right">
               <span
                 :class="cn(
                   'block font-medium tabular-nums',
-                  t.amount.startsWith('+') ? 'text-emerald-600 dark:text-emerald-400' : 'text-fg',
+                  tx.amount.startsWith('+') ? 'text-emerald-600 dark:text-emerald-400' : 'text-fg',
                 )"
-              >{{ t.amount }}</span>
-              <span class="block text-[10px] text-muted">{{ t.time }}</span>
+              >{{ tx.amount }}</span>
+              <span class="block text-[10px] text-muted">{{ tx.time }}</span>
             </span>
           </li>
         </ul>
@@ -93,7 +126,7 @@ onUnmounted(() => {
           class="w-full rounded-t-3xl border-t border-line bg-surface p-4"
           @click.stop
         >
-          <p class="text-sm font-medium">Send $25.00 to…</p>
+          <p class="text-sm font-medium">{{ T.sheetTitle }}</p>
           <div class="mt-3 flex justify-between">
             <button
               v-for="c in CONTACTS"

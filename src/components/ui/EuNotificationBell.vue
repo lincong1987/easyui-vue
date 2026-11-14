@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { AnimatePresence, motion, useAnimationControls } from 'motion-v';
+import { useLocale } from '../../i18n/useLocale';
 import { motionTransitions } from '../../lib/motion-tokens';
 import { BellIcon } from '../../lib/icons';
 import { cn } from '../../lib/utils';
@@ -9,15 +10,51 @@ const props = defineProps<{
   class?: string;
 }>();
 
-const NOTIFICATIONS = [
-  { title: 'Build succeeded', body: 'easyui-port deployed to production.', time: '2m' },
-  { title: 'New star', body: 'someone starred the repository.', time: '18m' },
-  { title: 'Weekly digest', body: '134 components · 66 implemented.', time: '1h' },
-];
+interface NotificationItem {
+  title: string;
+  body: string;
+  time: string;
+}
+
+const DATA: Record<
+  'en' | 'zh-CN',
+  {
+    notifications: NotificationItem[];
+    unread: string;
+    simulate: string;
+    markAllRead: string;
+  }
+> = {
+  en: {
+    notifications: [
+      { title: 'Build succeeded', body: 'easyui-port deployed to production.', time: '2m' },
+      { title: 'New star', body: 'someone starred the repository.', time: '18m' },
+      { title: 'Weekly digest', body: '134 components · 66 implemented.', time: '1h' },
+    ],
+    unread: 'Notifications, {count} unread',
+    simulate: 'simulate arrival',
+    markAllRead: 'Mark all as read',
+  },
+  'zh-CN': {
+    notifications: [
+      { title: '构建成功', body: 'easyui-port 已部署到生产环境。', time: '2 分钟前' },
+      { title: '新增 Star', body: '有人 Star 了该仓库。', time: '18 分钟前' },
+      { title: '每周摘要', body: '134 个组件 · 已实现 66 个。', time: '1 小时前' },
+    ],
+    unread: '通知，{count} 条未读',
+    simulate: '模拟新通知',
+    markAllRead: '全部标为已读',
+  },
+};
+
+const { locale } = useLocale();
+const ui = computed(() => DATA[locale.value]);
 
 const open = ref(false);
 const count = ref(3);
 const controls = useAnimationControls();
+
+const ariaLabel = computed(() => ui.value.unread.replace('{count}', String(count.value)));
 
 function receive() {
   count.value += 1;
@@ -38,7 +75,7 @@ function markAllRead() {
     <div class="flex items-center gap-3">
       <motion.button
         type="button"
-        :aria-label="`Notifications, ${count} unread`"
+        :aria-label="ariaLabel"
         :animate="controls"
         :while-press="{ scale: 0.92 }"
         :transition="motionTransitions.springSnappy"
@@ -64,7 +101,7 @@ function markAllRead() {
         class="rounded-full border border-line px-3 py-1.5 text-xs font-medium transition-colors hover:bg-card"
         @click="receive"
       >
-        simulate arrival
+        {{ ui.simulate }}
       </button>
     </div>
 
@@ -79,7 +116,7 @@ function markAllRead() {
         class="absolute top-full z-30 mt-2 w-72 origin-top rounded-2xl border border-line bg-surface p-1.5 shadow-xl"
       >
         <div
-          v-for="(n, i) in NOTIFICATIONS"
+          v-for="(n, i) in ui.notifications"
           :key="n.title"
           :class="cn('rounded-xl px-3 py-2.5', i === 0 && 'bg-card')"
         >
@@ -93,7 +130,7 @@ function markAllRead() {
           class="mt-1 w-full rounded-xl px-3 py-2 text-center text-xs text-muted transition-colors hover:bg-card hover:text-fg"
           @click="markAllRead"
         >
-          Mark all as read
+          {{ ui.markAllRead }}
         </button>
       </motion.div>
     </AnimatePresence>

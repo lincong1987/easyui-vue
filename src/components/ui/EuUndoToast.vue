@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { onUnmounted, ref, watch } from 'vue';
+import { computed, onUnmounted, ref, watch } from 'vue';
 import { AnimatePresence, motion } from 'motion-v';
+import { useLocale } from '../../i18n/useLocale';
 import { motionTransitions } from '../../lib/motion-tokens';
 import { cn } from '../../lib/utils';
 
@@ -9,6 +10,27 @@ const props = defineProps<{
   duration?: number;
   class?: string;
 }>();
+
+const { locale } = useLocale();
+
+const DATA: Record<'en' | 'zh-CN', { removed: string; safe: string; fallback: string; undo: string; replay: string }> = {
+  en: {
+    removed: '“Q3 report.pdf” was removed',
+    safe: '“Q3 report.pdf” sits safely in the folder',
+    fallback: 'Item deleted',
+    undo: 'Undo',
+    replay: 'replay toast',
+  },
+  'zh-CN': {
+    removed: '“Q3 report.pdf” 已删除',
+    safe: '“Q3 report.pdf” 还安稳地待在文件夹里',
+    fallback: '项目已删除',
+    undo: '撤销',
+    replay: '重播提示',
+  },
+};
+
+const d = computed(() => DATA[locale.value]);
 
 const duration = props.duration ?? 6000;
 const visible = ref(true);
@@ -64,7 +86,7 @@ function replay() {
         deleted ? 'border-red-500/40 text-red-600 dark:text-red-400' : 'border-line text-muted',
       )"
     >
-      {{ deleted ? '“Q3 report.pdf” was removed' : '“Q3 report.pdf” sits safely in the folder' }}
+      {{ deleted ? d.removed : d.safe }}
     </div>
     <AnimatePresence>
       <motion.div
@@ -79,7 +101,7 @@ function replay() {
         @pointerleave="paused = false"
       >
         <div class="min-w-0 flex-1">
-          <p class="truncate text-sm font-medium">{{ props.message ?? 'Item deleted' }}</p>
+          <p class="truncate text-sm font-medium">{{ props.message ?? d.fallback }}</p>
           <div class="mt-1.5 h-1 overflow-hidden rounded-full bg-card">
             <div
               class="h-full rounded-full bg-fg/70 transition-[width] duration-100 ease-linear"
@@ -91,7 +113,7 @@ function replay() {
           class="shrink-0 rounded-full bg-fg px-3.5 py-1.5 text-xs font-semibold text-bg transition-transform active:scale-95"
           @click="undo"
         >
-          Undo
+          {{ d.undo }}
         </button>
       </motion.div>
     </AnimatePresence>
@@ -100,7 +122,7 @@ function replay() {
       class="rounded-full border border-line px-3.5 py-1.5 text-xs font-medium text-muted transition-colors hover:text-fg"
       @click="replay"
     >
-      replay toast
+      {{ d.replay }}
     </button>
   </div>
 </template>

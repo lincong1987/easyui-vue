@@ -1,13 +1,43 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { AnimatePresence, motion } from 'motion-v';
+import { useLocale } from '../../i18n/useLocale';
 import { motionTransitions } from '../../lib/motion-tokens';
 import { cn } from '../../lib/utils';
 
 const props = defineProps<{ class?: string }>();
+const { locale } = useLocale();
 
-const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
-const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const DATA: Record<'en' | 'zh-CN', {
+  weekdays: string[];
+  months: string[];
+  prevMonth: string;
+  nextMonth: string;
+  selected: (iso: string) => string;
+  pickDay: string;
+  monthTitle: (month: string, year: number) => string;
+}> = {
+  en: {
+    weekdays: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'],
+    months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+    prevMonth: 'Previous month',
+    nextMonth: 'Next month',
+    selected: (iso) => `selected ${iso}`,
+    pickDay: 'pick a day — the pill glides over',
+    monthTitle: (month, year) => `${month} ${year}`,
+  },
+  'zh-CN': {
+    weekdays: ['一', '二', '三', '四', '五', '六', '日'],
+    months: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+    prevMonth: '上个月',
+    nextMonth: '下个月',
+    selected: (iso) => `已选 ${iso}`,
+    pickDay: '选择日期 —— 高亮块会随之滑动',
+    monthTitle: (month, year) => `${year}年${month}`,
+  },
+};
+
+const data = computed(() => DATA[locale.value]);
 
 interface DayCell {
   day: number;
@@ -60,7 +90,7 @@ function nav(delta: number) {
   <div :class="cn('w-full max-w-xs rounded-3xl border border-line bg-surface p-4 shadow-sm', props.class)">
     <div class="mb-3 flex items-center justify-between">
       <button
-        aria-label="Previous month"
+        :aria-label="data.prevMonth"
         class="rounded-full px-2.5 py-1 text-sm text-muted transition-colors hover:bg-card hover:text-fg"
         @click="nav(-1)"
       >
@@ -76,12 +106,12 @@ function nav(delta: number) {
             :transition="motionTransitions.springSnappy"
             class="text-sm font-medium"
           >
-            {{ MONTH_NAMES[month] }} {{ year }}
+            {{ data.monthTitle(data.months[month], year) }}
           </motion.p>
         </AnimatePresence>
       </div>
       <button
-        aria-label="Next month"
+        :aria-label="data.nextMonth"
         class="rounded-full px-2.5 py-1 text-sm text-muted transition-colors hover:bg-card hover:text-fg"
         @click="nav(1)"
       >
@@ -90,7 +120,7 @@ function nav(delta: number) {
     </div>
 
     <div class="grid grid-cols-7 gap-1 text-center text-[10px] text-muted">
-      <span v-for="d in WEEKDAYS" :key="d" class="py-1">{{ d }}</span>
+      <span v-for="d in data.weekdays" :key="d" class="py-1">{{ d }}</span>
     </div>
 
     <div class="relative mt-1 grid grid-cols-7 gap-1">
@@ -115,7 +145,7 @@ function nav(delta: number) {
       </template>
     </div>
     <p class="mt-3 text-center text-xs text-muted" aria-live="polite">
-      {{ selected ? `selected ${selected}` : 'pick a day — the pill glides over' }}
+      {{ selected ? data.selected(selected) : data.pickDay }}
     </p>
   </div>
 </template>

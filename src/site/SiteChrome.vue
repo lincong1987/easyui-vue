@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import { motion } from 'motion-v';
+import { computed, onMounted, ref } from 'vue';
+import { AnimatePresence, motion } from 'motion-v';
 import { motionTransitions } from '../lib/motion-tokens';
 import { useTheme } from '../theme/useTheme';
+import { useLocale } from '../i18n/useLocale';
+import { LOCALES } from '../i18n/locales';
 import { GithubIcon, MoonIcon, SearchIcon, SnailIcon, SunIcon, XIcon } from '../lib/icons';
 import { cn } from '../lib/utils';
 
@@ -10,14 +12,18 @@ defineProps<{ class?: string }>();
 
 const showBanner = ref(true);
 
-const NAV_LINKS = [
-  { label: 'Home', href: '#/' },
-  { label: 'Components', href: '#/components' },
-  { label: 'LLMs', href: '#/llms' },
-];
-
 const { theme, toggle } = useTheme();
+const { locale, setLocale, t } = useLocale();
 const active = ref('/');
+const langOpen = ref(false);
+
+const NAV_LINKS = computed(() => [
+  { label: t.value.nav.home, href: '#/' },
+  { label: t.value.nav.components, href: '#/components' },
+  { label: t.value.nav.llms, href: '#/llms' },
+]);
+
+const currentLocaleLabel = computed(() => LOCALES.find((l) => l.code === locale.value)?.label ?? locale.value);
 
 function readHash() {
   active.value = window.location.hash.replace('#', '') || '/';
@@ -31,13 +37,18 @@ onMounted(() => {
 function goSearch() {
   window.location.hash = '#/components';
 }
+
+function pickLocale(code: (typeof LOCALES)[number]['code']) {
+  setLocale(code);
+  langOpen.value = false;
+}
 </script>
 
 <template>
   <div v-if="showBanner" class="relative z-40 bg-black px-10 py-2 text-center text-xs font-medium text-white dark:bg-zinc-900">
-    EasyUI Vue port — a from-scratch Vue 3 replica of easyui.site · research notes ship with the task directory
+    {{ t.banner.text }}
     <button
-      aria-label="Dismiss banner"
+      :aria-label="t.banner.dismiss"
       class="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-white/70 transition-colors hover:text-white"
       @click="showBanner = false"
     >
@@ -74,7 +85,7 @@ function goSearch() {
 
       <div class="flex items-center gap-1">
         <button
-          aria-label="Browse components"
+          :aria-label="t.nav.browseComponents"
           class="rounded-full p-2 text-muted transition-colors hover:bg-card hover:text-fg"
           @click="goSearch"
         >
@@ -84,13 +95,46 @@ function goSearch() {
           href="https://github.com/Surajmaurya1/easyui"
           target="_blank"
           rel="noreferrer"
-          aria-label="Upstream GitHub repository"
+          :aria-label="t.nav.upstreamRepo"
           class="rounded-full p-2 text-muted transition-colors hover:bg-card hover:text-fg"
         >
           <GithubIcon :size="16" />
         </a>
+
+        <div class="relative">
+          <button
+            :aria-label="t.nav.language"
+            class="rounded-full px-2.5 py-1.5 text-xs font-medium text-muted transition-colors hover:bg-card hover:text-fg"
+            @click="langOpen = !langOpen"
+          >
+            {{ currentLocaleLabel }}
+          </button>
+          <AnimatePresence>
+            <motion.ul
+              v-if="langOpen"
+              :initial="{ opacity: 0, y: -6 }"
+              :animate="{ opacity: 1, y: 4 }"
+              :exit="{ opacity: 0, y: -6 }"
+              :transition="motionTransitions.springSnappy"
+              class="absolute right-0 top-full z-40 w-36 rounded-xl border border-line bg-surface p-1 shadow-xl"
+            >
+              <li v-for="l in LOCALES" :key="l.code">
+                <button
+                  :class="cn(
+                    'w-full rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors',
+                    l.code === locale ? 'bg-card font-medium text-fg' : 'text-muted hover:text-fg',
+                  )"
+                  @click="pickLocale(l.code)"
+                >
+                  {{ l.label }}
+                </button>
+              </li>
+            </motion.ul>
+          </AnimatePresence>
+        </div>
+
         <button
-          :aria-label="theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
+          :aria-label="theme === 'dark' ? t.nav.switchToLight : t.nav.switchToDark"
           class="rounded-full p-2 text-muted transition-colors hover:bg-card hover:text-fg"
           @click="toggle"
         >
@@ -101,4 +145,3 @@ function goSearch() {
     </nav>
   </header>
 </template>
-

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { onUnmounted, ref, watch } from 'vue';
+import { computed, onUnmounted, ref, watch } from 'vue';
 import { AnimatePresence, motion } from 'motion-v';
+import { useLocale } from '../../i18n/useLocale';
 import { motionTransitions } from '../../lib/motion-tokens';
 import { cn } from '../../lib/utils';
 
@@ -9,6 +10,23 @@ const props = defineProps<{
   duration?: number;
   class?: string;
 }>();
+
+const { locale } = useLocale();
+
+const DATA: Record<'en' | 'zh-CN', { fallback: string; dismiss: string; replay: string }> = {
+  en: {
+    fallback: 'Changes saved to the draft',
+    dismiss: 'Dismiss',
+    replay: 'replay toast',
+  },
+  'zh-CN': {
+    fallback: '更改已保存到草稿',
+    dismiss: '关闭',
+    replay: '重播提示',
+  },
+};
+
+const d = computed(() => DATA[locale.value]);
 
 const duration = props.duration ?? 5000;
 const visible = ref(true);
@@ -66,9 +84,9 @@ function replay() {
       >
         <div class="flex items-center gap-3">
           <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-sm text-emerald-600 dark:text-emerald-400">✓</span>
-          <p class="min-w-0 flex-1 truncate text-sm font-medium">{{ props.message ?? 'Changes saved to the draft' }}</p>
+          <p class="min-w-0 flex-1 truncate text-sm font-medium">{{ props.message ?? d.fallback }}</p>
           <button
-            aria-label="Dismiss"
+            :aria-label="d.dismiss"
             class="shrink-0 rounded-full p-1 text-xs text-muted transition-colors hover:text-fg"
             @click="visible = false"
           >
@@ -88,7 +106,7 @@ function replay() {
       class="rounded-full border border-line px-3.5 py-1.5 text-xs font-medium text-muted transition-colors hover:text-fg"
       @click="replay"
     >
-      replay toast
+      {{ d.replay }}
     </button>
   </div>
 </template>

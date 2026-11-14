@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { AnimatePresence, motion } from 'motion-v';
+import { useLocale } from '../../i18n/useLocale';
 import { motionTransitions } from '../../lib/motion-tokens';
 import { CheckIcon, TrashIcon } from '../../lib/icons';
 import { cn } from '../../lib/utils';
@@ -9,10 +10,37 @@ const props = defineProps<{
   class?: string;
 }>();
 
-const ROWS = ['component-a.tsx', 'component-b.tsx', 'component-c.tsx', 'component-d.tsx'];
+const DATA: Record<
+  'en' | 'zh-CN',
+  {
+    rows: string[];
+    everythingRemoved: string;
+    selectedCount: string;
+    remove: string;
+  }
+> = {
+  en: {
+    rows: ['component-a.tsx', 'component-b.tsx', 'component-c.tsx', 'component-d.tsx'],
+    everythingRemoved: 'everything removed',
+    selectedCount: '{n} selected',
+    remove: 'Remove',
+  },
+  'zh-CN': {
+    rows: ['component-a.tsx', 'component-b.tsx', 'component-c.tsx', 'component-d.tsx'],
+    everythingRemoved: '已全部移除',
+    selectedCount: '已选 {n} 项',
+    remove: '移除',
+  },
+};
+
+const { locale } = useLocale();
+const ui = computed(() => DATA[locale.value]);
+const rows = computed(() => ui.value.rows);
 
 const selected = ref<Set<string>>(new Set(['component-a.tsx', 'component-c.tsx']));
 const removed = ref<string[]>([]);
+const selectedLabel = computed(() => ui.value.selectedCount.replace('{n}', String(selected.value.size)));
+const allRemoved = computed(() => rows.value.every((r) => removed.value.includes(r)));
 
 function toggle(row: string) {
   const next = new Set(selected.value);
@@ -31,7 +59,7 @@ function removeSelected() {
   <div :class="cn('w-full max-w-sm', props.class)">
     <div class="overflow-hidden rounded-2xl border border-line bg-surface">
       <button
-        v-for="row in ROWS.filter((r) => !removed.includes(r))"
+        v-for="row in rows.filter((r) => !removed.includes(r))"
         :key="row"
         :aria-pressed="selected.has(row)"
         :class="cn(
@@ -50,8 +78,8 @@ function removeSelected() {
         </span>
         <span class="font-mono text-xs text-fg">{{ row }}</span>
       </button>
-      <p v-if="ROWS.every((r) => removed.includes(r))" class="px-3.5 py-6 text-center text-xs text-muted">
-        everything removed
+      <p v-if="allRemoved" class="px-3.5 py-6 text-center text-xs text-muted">
+        {{ ui.everythingRemoved }}
       </p>
     </div>
 
@@ -65,12 +93,12 @@ function removeSelected() {
         :transition="motionTransitions.springMorph"
         class="fixed inset-x-0 bottom-6 z-40 mx-auto flex w-fit max-w-[92vw] items-center gap-2 rounded-full border border-line bg-surface px-3 py-2 shadow-2xl"
       >
-        <span class="pl-1 text-[11px] font-medium text-muted tabular-nums">{{ selected.size }} selected</span>
+        <span class="pl-1 text-[11px] font-medium text-muted tabular-nums">{{ selectedLabel }}</span>
         <button
           class="flex items-center gap-1.5 rounded-full bg-red-500/90 px-3 py-1.5 text-[11px] font-medium text-white transition-colors hover:bg-red-600"
           @click="removeSelected"
         >
-          <TrashIcon :size="12" /> Remove
+          <TrashIcon :size="12" /> {{ ui.remove }}
         </button>
       </motion.div>
     </AnimatePresence>

@@ -1,10 +1,41 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { motion } from 'motion-v';
+import { useLocale } from '../../i18n/useLocale';
 import { motionTransitions } from '../../lib/motion-tokens';
 import { cn } from '../../lib/utils';
 
 const props = defineProps<{ class?: string }>();
+
+const { locale } = useLocale();
+
+const DATA: Record<
+  'en' | 'zh-CN',
+  {
+    throughput: string;
+    deltaLabel: string;
+    hint: string;
+    point: string;
+    sparkline: string;
+  }
+> = {
+  en: {
+    throughput: 'throughput',
+    deltaLabel: '{sign} {n} over {range}',
+    hint: 'hover the line to inspect points',
+    point: 'point {i}/{n} · {v} req/s',
+    sparkline: 'Throughput sparkline',
+  },
+  'zh-CN': {
+    throughput: '吞吐量',
+    deltaLabel: '{sign} {n}，对比 {range}',
+    hint: '悬停折线可查看数据点',
+    point: '第 {i}/{n} 个数据点 · {v} req/s',
+    sparkline: '吞吐量迷你折线图',
+  },
+};
+
+const d = computed(() => DATA[locale.value]);
 
 const RANGES = ['1H', '24H', '7D'] as const;
 type Range = (typeof RANGES)[number];
@@ -37,15 +68,24 @@ const shown = computed(() => {
   return idx !== null && data.value[idx] !== undefined ? data.value[idx] : data.value[data.value.length - 1];
 });
 const delta = computed(() => data.value[data.value.length - 1] - data.value[0]);
+const deltaLabel = computed(() => {
+  const sign = delta.value >= 0 ? '▲' : '▼';
+  return d.value.deltaLabel
+    .replace('{sign}', sign)
+    .replace('{n}', String(Math.abs(delta.value)))
+    .replace('{range}', range.value);
+});
 const activePoint = computed(() => {
   const idx = scrub.value;
   return idx === null ? null : (pts.value[idx] ?? null);
 });
 const hint = computed(() => {
   const idx = scrub.value;
-  return idx === null
-    ? 'hover the line to inspect points'
-    : `point ${idx + 1}/${data.value.length} · ${data.value[idx]} req/s`;
+  if (idx === null) return d.value.hint;
+  return d.value.point
+    .replace('{i}', String(idx + 1))
+    .replace('{n}', String(data.value.length))
+    .replace('{v}', String(data.value[idx]));
 });
 
 function setRange(r: Range) {
@@ -64,7 +104,7 @@ function onScrub(e: PointerEvent) {
   <div :class="cn('w-full max-w-sm rounded-3xl border border-line bg-surface p-5 shadow-sm', props.class)">
     <div class="flex items-start justify-between">
       <div>
-        <p class="text-xs uppercase tracking-widest text-muted">throughput</p>
+        <p class="text-xs uppercase tracking-widest text-muted">{{ d.throughput }}</p>
         <p class="mt-1 text-3xl font-semibold tabular-nums tracking-tight">
           {{ shown }}
           <span class="ml-1 text-sm font-normal text-muted">req/s</span>
@@ -75,7 +115,7 @@ function onScrub(e: PointerEvent) {
             delta >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500',
           )"
         >
-          {{ (delta >= 0 ? '▲' : '▼') + ' ' + Math.abs(delta) + ' over ' + range }}
+          {{ deltaLabel }}
         </p>
       </div>
       <div class="flex rounded-full border border-line bg-card p-0.5">
@@ -104,7 +144,7 @@ function onScrub(e: PointerEvent) {
       preserveAspectRatio="none"
       class="mt-3 h-24 w-full touch-none"
       role="img"
-      aria-label="Throughput sparkline"
+      :aria-label="d.sparkline"
       @pointermove="onScrub"
       @pointerleave="scrub = null"
     >

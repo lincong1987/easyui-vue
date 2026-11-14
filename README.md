@@ -49,6 +49,12 @@ Every component is also browsable with live previews in the bundled gallery (`np
 | Buttons | 12 | Magnetic, Liquid Ripple, Neon Edge, Rainbow, Drag-to-Confirm, Typewriter |
 | Auth | 2 | Login, Sign Up |
 
+## Internationalization
+
+The gallery ships in **English** and **简体中文 (Simplified Chinese)**. The locale follows the browser language by default, can be switched from the navbar, and persists in `localStorage`. Component catalog titles and descriptions are localized too.
+
+New locales: add a dictionary under `src/i18n/` and register it in `src/i18n/locales.ts`.
+
 ## Development
 
 ```bash

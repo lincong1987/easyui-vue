@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import { AnimatePresence, motion } from 'motion-v';
 import { motionTransitions } from '../../lib/motion-tokens';
 import { cn } from '../../lib/utils';
+import { useLocale } from '../../i18n/useLocale';
 
 const props = withDefaults(
   defineProps<{
@@ -16,21 +17,60 @@ type Phase = 'processing' | 'verifying' | 'success';
 
 const PHASES: Phase[] = ['processing', 'verifying', 'success'];
 
+const { locale } = useLocale();
+
+const DATA: Record<'en' | 'zh-CN', {
+  processing: string;
+  verifying: string;
+  success: string;
+  failed: string;
+  failedSubtitle: string;
+  subtitle: string;
+  replay: string;
+  next: string;
+  simulateFailure: string;
+}> = {
+  en: {
+    processing: 'Processing payment…',
+    verifying: 'Verifying with your bank…',
+    success: 'Payment complete',
+    failed: 'Payment failed',
+    failedSubtitle: 'The issuer declined the charge — nothing was taken.',
+    subtitle: '{amount} · EasyUI Pro annual',
+    replay: 'replay',
+    next: 'next stage',
+    simulateFailure: 'simulate failure',
+  },
+  'zh-CN': {
+    processing: '正在处理支付…',
+    verifying: '正在向银行验证…',
+    success: '支付完成',
+    failed: '支付失败',
+    failedSubtitle: '发卡行拒绝了本次扣款 —— 未产生任何费用。',
+    subtitle: '{amount} · EasyUI Pro 年度订阅',
+    replay: '重播',
+    next: '下一阶段',
+    simulateFailure: '模拟失败',
+  },
+};
+
+const copy = computed(() => DATA[locale.value]);
+
 const phase = ref<Phase>('processing');
 const failed = ref(false);
 
 const title = computed(() =>
   failed.value
-    ? 'Payment failed'
+    ? copy.value.failed
     : phase.value === 'success'
-      ? 'Payment complete'
+      ? copy.value.success
       : phase.value === 'verifying'
-        ? 'Verifying with your bank…'
-        : 'Processing payment…',
+        ? copy.value.verifying
+        : copy.value.processing,
 );
 
 const subtitle = computed(() =>
-  failed.value ? 'The issuer declined the charge — nothing was taken.' : `${props.amount} · EasyUI Pro annual`,
+  failed.value ? copy.value.failedSubtitle : copy.value.subtitle.replace('{amount}', props.amount),
 );
 
 function advance() {
@@ -131,13 +171,13 @@ function fail() {
         class="rounded-full bg-fg px-4 py-2 text-xs font-medium text-bg transition-transform active:scale-95"
         @click="advance"
       >
-        {{ phase === 'success' ? 'replay' : 'next stage' }}
+        {{ phase === 'success' ? copy.replay : copy.next }}
       </button>
       <button
         class="rounded-full border border-line px-4 py-2 text-xs font-medium transition-colors hover:bg-card"
         @click="fail"
       >
-        simulate failure
+        {{ copy.simulateFailure }}
       </button>
     </div>
   </div>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { AnimatePresence, motion } from 'motion-v';
+import { useLocale } from '../../i18n/useLocale';
 import { motionTransitions } from '../../lib/motion-tokens';
 import { CheckIcon, SparklesIcon, ZapIcon } from '../../lib/icons';
 import { cn } from '../../lib/utils';
@@ -12,33 +13,58 @@ interface Step {
   state: 'pending' | 'running' | 'done';
 }
 
-const SCRIPT: Omit<Step, 'state'>[] = [
-  { id: 'think', label: 'Planning the task', detail: 'decompose goal → 4 steps' },
-  { id: 'tool', label: 'Calling tool: search_registry', detail: 'query "animated charts"' },
-  { id: 'fetch', label: 'Fetching component source', detail: 'GET /registry/donut-chart.json' },
-  { id: 'write', label: 'Writing integration notes', detail: 'streaming tokens…' },
-];
+const DATA: Record<
+  'en' | 'zh-CN',
+  {
+    header: string;
+    script: Omit<Step, 'state'>[];
+  }
+> = {
+  en: {
+    header: 'agent run · live',
+    script: [
+      { id: 'think', label: 'Planning the task', detail: 'decompose goal → 4 steps' },
+      { id: 'tool', label: 'Calling tool: search_registry', detail: 'query "animated charts"' },
+      { id: 'fetch', label: 'Fetching component source', detail: 'GET /registry/donut-chart.json' },
+      { id: 'write', label: 'Writing integration notes', detail: 'streaming tokens…' },
+    ],
+  },
+  'zh-CN': {
+    header: '智能体运行 · 实时',
+    script: [
+      { id: 'think', label: '规划任务', detail: '拆解目标 → 4 个步骤' },
+      { id: 'tool', label: '调用工具：search_registry', detail: '查询 "animated charts"' },
+      { id: 'fetch', label: '获取组件源码', detail: 'GET /registry/donut-chart.json' },
+      { id: 'write', label: '撰写集成说明', detail: '流式输出 token…' },
+    ],
+  },
+};
 
 const props = defineProps<{ class?: string }>();
 
-const steps = ref<Step[]>(SCRIPT.map((s) => ({ ...s, state: 'pending' as const })));
+const { locale } = useLocale();
+const ui = computed(() => DATA[locale.value]);
+
+const started = ref(0);
 const inspect = ref<string | null>('tool');
 let timer: number | undefined;
 let restart: number | undefined;
 
+const steps = computed<Step[]>(() =>
+  ui.value.script.map((s, idx) => {
+    const state: Step['state'] =
+      idx < started.value - 1 ? 'done' : idx === started.value - 1 ? 'running' : 'pending';
+    return { ...s, state };
+  }),
+);
+
 onMounted(() => {
-  let i = 0;
   timer = window.setInterval(() => {
-    steps.value = steps.value.map((s, idx) => ({
-      ...s,
-      state: idx < i ? 'done' : idx === i ? 'running' : 'pending',
-    }));
-    i += 1;
-    if (i > SCRIPT.length) {
+    started.value += 1;
+    if (started.value > ui.value.script.length) {
       window.clearInterval(timer);
       restart = window.setTimeout(() => {
-        i = 0;
-        steps.value = SCRIPT.map((s) => ({ ...s, state: 'pending' as const }));
+        started.value = 0;
       }, 2200);
     }
   }, 1300);
@@ -57,7 +83,7 @@ function toggleInspect(id: string) {
   <div :class="cn('w-full max-w-md rounded-2xl border border-line bg-surface p-3.5', props.class)">
     <div class="mb-2 flex items-center gap-2 text-xs font-medium text-fg">
       <SparklesIcon :size="14" class="text-accent" />
-      agent run · live
+      {{ ui.header }}
     </div>
     <ul class="space-y-1">
       <li v-for="(s, i) in steps" :key="s.id" class="relative flex gap-3 pl-1">

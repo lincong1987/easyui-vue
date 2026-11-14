@@ -1,14 +1,47 @@
 <script setup lang="ts">
-import { onUnmounted, ref } from 'vue';
+import { computed, onUnmounted, ref } from 'vue';
 import { AnimatePresence, motion } from 'motion-v';
 import { motionTransitions } from '../../lib/motion-tokens';
 import { SendIcon, SparklesIcon, XIcon, ZapIcon } from '../../lib/icons';
 import { cn } from '../../lib/utils';
+import { useLocale } from '../../i18n/useLocale';
 
 const props = defineProps<{ class?: string }>();
 
 const MODELS = ['nex-n2.6', 'glm-5.3-flash', 'kimi-k3.1-pro'];
-const CHIPS = ['Summarize this page', 'Draft a changelog', 'Explain the springs'];
+
+const { locale } = useLocale();
+
+const DATA: Record<'en' | 'zh-CN', {
+  chips: string[];
+  placeholder: string;
+  generating: string;
+  promptAria: string;
+  stopAria: string;
+  sendAria: string;
+  remove: string;
+}> = {
+  en: {
+    chips: ['Summarize this page', 'Draft a changelog', 'Explain the springs'],
+    placeholder: 'Ask anything about the library…',
+    generating: 'Generating…',
+    promptAria: 'Prompt',
+    stopAria: 'Stop generating',
+    sendAria: 'Send prompt',
+    remove: 'Remove',
+  },
+  'zh-CN': {
+    chips: ['总结这个页面', '起草更新日志', '解释弹簧动画'],
+    placeholder: '关于这个组件库，随便问…',
+    generating: '生成中…',
+    promptAria: '提示词',
+    stopAria: '停止生成',
+    sendAria: '发送提示词',
+    remove: '移除',
+  },
+};
+
+const copy = computed(() => DATA[locale.value]);
 
 const value = ref('');
 const model = ref(MODELS[0]);
@@ -72,7 +105,7 @@ onUnmounted(() => {
   <div :class="cn('w-full max-w-md rounded-3xl border border-line bg-surface p-3 shadow-sm', props.class)">
     <div class="flex flex-wrap gap-1.5 pb-2">
       <button
-        v-for="c in CHIPS"
+        v-for="c in copy.chips"
         :key="c"
         class="rounded-full border border-line px-2.5 py-1 text-[10px] text-muted transition-colors hover:border-fg/40 hover:text-fg"
         @click="useChip(c)"
@@ -92,7 +125,7 @@ onUnmounted(() => {
       >
         <span v-for="a in attachments" :key="a" class="flex items-center gap-1 rounded-lg bg-card px-2 py-1 text-[10px] text-fg">
           📎 {{ a }}
-          <button :aria-label="`Remove ${a}`" class="text-muted hover:text-fg" @click="removeAttachment(a)">
+          <button :aria-label="`${copy.remove} ${a}`" class="text-muted hover:text-fg" @click="removeAttachment(a)">
             <XIcon :size="9" />
           </button>
         </span>
@@ -109,8 +142,8 @@ onUnmounted(() => {
         ref="taRef"
         rows="1"
         :value="value"
-        :placeholder="streaming ? 'Generating…' : 'Ask anything about the library…'"
-        aria-label="Prompt"
+        :placeholder="streaming ? copy.generating : copy.placeholder"
+        :aria-label="copy.promptAria"
         class="max-h-[140px] min-h-9 flex-1 resize-none bg-transparent py-1.5 text-sm outline-none placeholder:text-muted/70"
         @input="onInput"
         @keydown="onKeyDown"
@@ -120,7 +153,7 @@ onUnmounted(() => {
         :initial="{ scale: 0.8, opacity: 0 }"
         :animate="{ scale: 1, opacity: 1 }"
         class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-500/90 text-white"
-        aria-label="Stop generating"
+        :aria-label="copy.stopAria"
         @click="streaming = false"
       >
         <span class="h-3 w-3 rounded-[2px] bg-current" />
@@ -130,7 +163,7 @@ onUnmounted(() => {
         :while-press="{ scale: 0.9 }"
         :transition="motionTransitions.springSnappy"
         :disabled="!value.trim()"
-        aria-label="Send prompt"
+        :aria-label="copy.sendAria"
         :class="cn(
           'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors',
           value.trim() ? 'bg-fg text-bg' : 'bg-line text-muted',

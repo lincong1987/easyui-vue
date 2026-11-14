@@ -1,16 +1,39 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { BellIcon, HeartIcon, PlusIcon, SearchIcon, SendIcon } from '../../lib/icons';
+import { useLocale } from '../../i18n/useLocale';
 import { cn } from '../../lib/utils';
 
 const props = defineProps<{ class?: string }>();
 
-const ACTIONS = [
-  { icon: PlusIcon, label: 'Create' },
-  { icon: SearchIcon, label: 'Search' },
-  { icon: BellIcon, label: 'Alerts' },
-  { icon: HeartIcon, label: 'Likes' },
-  { icon: SendIcon, label: 'Send' },
+type ActionKey = 'create' | 'search' | 'alerts' | 'likes' | 'send';
+
+const DATA: Record<
+  'en' | 'zh-CN',
+  {
+    actions: Record<ActionKey, string>;
+    caption: string;
+  }
+> = {
+  en: {
+    actions: { create: 'Create', search: 'Search', alerts: 'Alerts', likes: 'Likes', send: 'Send' },
+    caption: 'proximity magnification, just like the macOS dock',
+  },
+  'zh-CN': {
+    actions: { create: '新建', search: '搜索', alerts: '提醒', likes: '喜欢', send: '发送' },
+    caption: '邻近放大效果，和 macOS 程序坞一致',
+  },
+};
+
+const { locale } = useLocale();
+const T = computed(() => DATA[locale.value]);
+
+const ACTIONS: { icon: typeof PlusIcon; key: ActionKey }[] = [
+  { icon: PlusIcon, key: 'create' },
+  { icon: SearchIcon, key: 'search' },
+  { icon: BellIcon, key: 'alerts' },
+  { icon: HeartIcon, key: 'likes' },
+  { icon: SendIcon, key: 'send' },
 ];
 
 const dockEl = ref<HTMLDivElement | null>(null);
@@ -41,13 +64,13 @@ function reset() {
       @pointermove="onMove"
       @pointerleave="reset"
     >
-      <div v-for="(a, i) in ACTIONS" :key="a.label" class="relative flex flex-col items-center">
+      <div v-for="(a, i) in ACTIONS" :key="a.key" class="relative flex flex-col items-center">
         <span
           v-if="hover === i"
           class="absolute -top-8 whitespace-nowrap rounded-lg bg-fg px-2 py-1 text-[10px] font-medium text-bg shadow"
-        >{{ a.label }}</span>
+        >{{ T.actions[a.key] }}</span>
         <button
-          :aria-label="a.label"
+          :aria-label="T.actions[a.key]"
           :style="{ transform: `scale(${scales[i]})`, transformOrigin: 'bottom center' }"
           class="flex h-11 w-11 items-center justify-center rounded-2xl border border-line bg-card text-fg shadow-sm transition-[background-color] hover:bg-line"
           @pointerenter="hover = i"
@@ -57,6 +80,6 @@ function reset() {
         </button>
       </div>
     </div>
-    <p class="text-xs text-muted">proximity magnification, just like the macOS dock</p>
+    <p class="text-xs text-muted">{{ T.caption }}</p>
   </div>
 </template>

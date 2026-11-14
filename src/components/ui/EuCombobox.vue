@@ -1,11 +1,32 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref } from 'vue';
 import { AnimatePresence, motion } from 'motion-v';
+import { useLocale } from '../../i18n/useLocale';
 import { motionTransitions } from '../../lib/motion-tokens';
 import { CheckIcon, ChevronDownIcon, SearchIcon } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 
 const props = defineProps<{ class?: string }>();
+const { locale } = useLocale();
+
+const DATA: Record<'en' | 'zh-CN', {
+  placeholder: string;
+  searchAria: string;
+  empty: string;
+}> = {
+  en: {
+    placeholder: 'Search components…',
+    searchAria: 'Combobox search',
+    empty: 'No matches.',
+  },
+  'zh-CN': {
+    placeholder: '搜索组件…',
+    searchAria: 'Combobox 搜索',
+    empty: '没有匹配项。',
+  },
+};
+
+const data = computed(() => DATA[locale.value]);
 
 const OPTIONS = [
   'Activity Heatmap',
@@ -85,8 +106,8 @@ onUnmounted(() => {
       <SearchIcon :size="14" class="shrink-0 text-muted" />
       <input
         :value="open ? query : selected"
-        placeholder="Search components…"
-        aria-label="Combobox search"
+        :placeholder="data.placeholder"
+        :aria-label="data.searchAria"
         role="combobox"
         :aria-expanded="open"
         class="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted/70"
@@ -148,7 +169,7 @@ onUnmounted(() => {
             </AnimatePresence>
           </button>
         </li>
-        <li v-if="results.length === 0" class="px-3 py-6 text-center text-sm text-muted">No matches.</li>
+        <li v-if="results.length === 0" class="px-3 py-6 text-center text-sm text-muted">{{ data.empty }}</li>
       </motion.ul>
     </AnimatePresence>
   </div>

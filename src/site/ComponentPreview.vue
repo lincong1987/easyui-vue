@@ -2,8 +2,9 @@
 import { computed, type Component } from 'vue';
 import { motion } from 'motion-v';
 import { motionTransitions } from '../lib/motion-tokens';
-import { DEMOS } from '../site/demos';
+import { getDemos } from '../site/demos';
 import { isNew } from '../lib/catalog';
+import { useLocale } from '../i18n/useLocale';
 import { ArrowUpRightIcon, PackageIcon } from '../lib/icons';
 import { cn } from '../lib/utils';
 
@@ -14,7 +15,9 @@ const props = defineProps<{
   class?: string;
 }>();
 
-const Demo = computed<Component | null>(() => DEMOS[props.slug] ?? null);
+const { t, locale } = useLocale();
+
+const Demo = computed<Component | null>(() => getDemos(locale.value)[props.slug] ?? null);
 const newBadge = computed(() => isNew(props.createdAt));
 </script>
 
@@ -34,7 +37,7 @@ const newBadge = computed(() => isNew(props.createdAt));
         <span
           v-if="newBadge"
           class="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400"
-        >NEW</span>
+        >{{ t.preview.new }}</span>
         <span class="text-muted transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
           <ArrowUpRightIcon :size="15" />
         </span>
@@ -44,9 +47,7 @@ const newBadge = computed(() => isNew(props.createdAt));
       <component :is="Demo" v-if="Demo" />
       <div v-else class="flex flex-col items-center gap-1.5 text-center">
         <PackageIcon :size="18" class="text-muted/60" />
-        <p class="max-w-[220px] text-xs leading-relaxed text-muted">
-          Catalogued from upstream — implementation not included in this port.
-        </p>
+        <p class="max-w-[220px] text-xs leading-relaxed text-muted">{{ t.preview.cataloguedFromUpstream }}</p>
       </div>
     </div>
   </motion.a>

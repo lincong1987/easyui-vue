@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { AnimatePresence, motion } from 'motion-v';
+import { useLocale } from '../../i18n/useLocale';
 import { motionTransitions } from '../../lib/motion-tokens';
 import { cn } from '../../lib/utils';
 
@@ -13,24 +14,51 @@ interface EventItem {
   meta: Record<string, string>;
 }
 
-const KINDS: Record<Kind, { label: string; tint: string }> = {
-  deploy: { label: 'deploy', tint: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' },
-  star: { label: 'star', tint: 'bg-amber-500/15 text-amber-600 dark:text-amber-400' },
-  issue: { label: 'issue', tint: 'bg-red-500/15 text-red-600 dark:text-red-400' },
-  merge: { label: 'merge', tint: 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400' },
+const KINDS: Record<Kind, { tint: string }> = {
+  deploy: { tint: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' },
+  star: { tint: 'bg-amber-500/15 text-amber-600 dark:text-amber-400' },
+  issue: { tint: 'bg-red-500/15 text-red-600 dark:text-red-400' },
+  merge: { tint: 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400' },
 };
 
-const POOL: Omit<EventItem, 'id' | 'time'>[] = [
-  { kind: 'deploy', text: 'production deploy finished', meta: { env: 'prod', dur: '42s' } },
-  { kind: 'star', text: 'new star on the repository', meta: { from: '@devkai' } },
-  { kind: 'merge', text: 'PR #212 merged into main', meta: { by: 'rin', files: '6' } },
-  { kind: 'issue', text: 'flaky test reported', meta: { suite: 'registry' } },
-  { kind: 'deploy', text: 'preview environment rebuilt', meta: { env: 'preview', dur: '18s' } },
-];
+const DATA: Record<
+  'en' | 'zh-CN',
+  {
+    labels: Record<'all' | Kind, string>;
+    pool: Omit<EventItem, 'id' | 'time'>[];
+    hint: string;
+  }
+> = {
+  en: {
+    labels: { all: 'all', deploy: 'deploy', star: 'star', issue: 'issue', merge: 'merge' },
+    pool: [
+      { kind: 'deploy', text: 'production deploy finished', meta: { env: 'prod', dur: '42s' } },
+      { kind: 'star', text: 'new star on the repository', meta: { from: '@devkai' } },
+      { kind: 'merge', text: 'PR #212 merged into main', meta: { by: 'rin', files: '6' } },
+      { kind: 'issue', text: 'flaky test reported', meta: { suite: 'registry' } },
+      { kind: 'deploy', text: 'preview environment rebuilt', meta: { env: 'preview', dur: '18s' } },
+    ],
+    hint: 'live simulation · click an event to expand its payload',
+  },
+  'zh-CN': {
+    labels: { all: '全部', deploy: '部署', star: '星标', issue: '问题', merge: '合并' },
+    pool: [
+      { kind: 'deploy', text: '生产环境部署完成', meta: { env: 'prod', dur: '42s' } },
+      { kind: 'star', text: '仓库收到新的 Star', meta: { from: '@devkai' } },
+      { kind: 'merge', text: 'PR #212 已合并到 main', meta: { by: 'rin', files: '6' } },
+      { kind: 'issue', text: '发现不稳定的测试', meta: { suite: 'registry' } },
+      { kind: 'deploy', text: '预览环境已重建', meta: { env: 'preview', dur: '18s' } },
+    ],
+    hint: '实时模拟 · 点击事件可展开其 payload',
+  },
+};
 
 const FILTERS: ('all' | Kind)[] = ['all', 'deploy', 'star', 'merge', 'issue'];
 
 const props = defineProps<{ class?: string }>();
+
+const { locale } = useLocale();
+const ui = computed(() => DATA[locale.value]);
 
 const filter = ref<'all' | Kind>('all');
 const events = ref<EventItem[]>([]);
@@ -40,7 +68,8 @@ let timer: number | undefined;
 
 onMounted(() => {
   const push = () => {
-    const pick = POOL[Math.floor(Math.random() * POOL.length)];
+    const pool = DATA[locale.value].pool;
+    const pick = pool[Math.floor(Math.random() * pool.length)];
     events.value = [
       {
         ...pick,
@@ -73,7 +102,7 @@ const shown = computed(() => (filter.value === 'all' ? events.value : events.val
         )"
         @click="filter = f"
       >
-        {{ f }}
+        {{ ui.labels[f] }}
       </button>
     </div>
 
@@ -95,7 +124,7 @@ const shown = computed(() => (filter.value === 'all' ? events.value : events.val
               @click="expanded = expanded === e.id ? null : e.id"
             >
               <span :class="cn('rounded-md px-1.5 py-0.5 text-[10px] font-semibold', KINDS[e.kind].tint)">
-                {{ KINDS[e.kind].label }}
+                {{ ui.labels[e.kind] }}
               </span>
               <span class="min-w-0 flex-1 truncate text-xs text-fg">{{ e.text }}</span>
               <span class="shrink-0 text-[10px] text-muted tabular-nums">{{ e.time }}</span>
@@ -116,6 +145,6 @@ const shown = computed(() => (filter.value === 'all' ? events.value : events.val
         </AnimatePresence>
       </ul>
     </div>
-    <p class="mt-2 text-center text-[10px] text-muted">live simulation · click an event to expand its payload</p>
+    <p class="mt-2 text-center text-[10px] text-muted">{{ ui.hint }}</p>
   </div>
 </template>

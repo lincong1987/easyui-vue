@@ -1,11 +1,21 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref } from 'vue';
 import { AnimatePresence, motion } from 'motion-v';
+import { useLocale } from '../../i18n/useLocale';
 import { motionTransitions } from '../../lib/motion-tokens';
 import { CheckIcon, CopyIcon } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 
 const props = defineProps<{ class?: string }>();
+
+const { locale } = useLocale();
+
+const DATA: Record<'en' | 'zh-CN', { copy: string; param: string }> = {
+  en: { copy: 'Copy snippet', param: 'Component parameter' },
+  'zh-CN': { copy: '复制代码片段', param: '组件参数' },
+};
+
+const d = computed(() => DATA[locale.value]);
 
 const RUNTIMES = ['cURL', 'TypeScript', 'Python', 'Go'] as const;
 type Runtime = (typeof RUNTIMES)[number];
@@ -65,7 +75,7 @@ onUnmounted(() => window.clearTimeout(copyTimer));
       >{{ r }}</button>
       <span class="flex-1" />
       <button
-        aria-label="Copy snippet"
+        :aria-label="d.copy"
         class="rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-white/10 hover:text-white"
         @click="copy"
       >
@@ -78,7 +88,7 @@ onUnmounted(() => window.clearTimeout(copyTimer));
       <span>component:</span>
       <input
         :value="endpoint"
-        aria-label="Component parameter"
+        :aria-label="d.param"
         :spellcheck="false"
         class="w-40 rounded-md bg-white/5 px-2 py-1 font-mono text-zinc-200 outline-none focus:bg-white/10"
         @input="onInput"

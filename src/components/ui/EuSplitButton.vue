@@ -1,19 +1,54 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { AnimatePresence, motion } from 'motion-v';
+import { useLocale } from '../../i18n/useLocale';
 import { motionTransitions } from '../../lib/motion-tokens';
 import { ChevronDownIcon } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 
 const props = defineProps<{ class?: string }>();
 
-const ACTIONS = ['Duplicate', 'Rename', 'Archive'];
+const { locale } = useLocale();
+
+const DATA: Record<
+  'en' | 'zh-CN',
+  {
+    save: string;
+    saveApplied: string;
+    moreActions: string;
+    hint: string;
+    actions: string[];
+  }
+> = {
+  en: {
+    save: 'Save changes',
+    saveApplied: 'Save applied',
+    moreActions: 'More save actions',
+    hint: 'chevron shares the pill with the primary action',
+    actions: ['Duplicate', 'Rename', 'Archive'],
+  },
+  'zh-CN': {
+    save: '保存更改',
+    saveApplied: '已保存',
+    moreActions: '更多保存操作',
+    hint: '下拉箭头与主操作共用同一颗胶囊按钮',
+    actions: ['复制', '重命名', '归档'],
+  },
+};
+
+const d = computed(() => DATA[locale.value]);
 
 const open = ref(false);
-const last = ref<string | null>(null);
+const last = ref<number | 'save' | null>(null);
 
-function choose(action: string) {
-  last.value = action;
+const hint = computed(() => {
+  if (last.value === null) return d.value.hint;
+  if (last.value === 'save') return d.value.saveApplied;
+  return d.value.actions[last.value] ?? d.value.hint;
+});
+
+function choose(index: number) {
+  last.value = index;
   open.value = false;
 }
 </script>
@@ -24,12 +59,12 @@ function choose(action: string) {
       <div class="flex overflow-hidden rounded-xl border border-line bg-surface shadow-sm">
         <button
           class="px-4 py-2.5 text-sm font-medium text-fg transition-colors hover:bg-card"
-          @click="last = 'Save applied'"
-        >Save changes</button>
+          @click="last = 'save'"
+        >{{ d.save }}</button>
         <span class="w-px bg-line" />
         <button
           :aria-expanded="open"
-          aria-label="More save actions"
+          :aria-label="d.moreActions"
           :class="
             cn(
               'px-2.5 py-2.5 text-muted transition-colors hover:bg-card hover:text-fg',
@@ -54,16 +89,16 @@ function choose(action: string) {
           role="menu"
           class="absolute inset-x-0 top-full z-30 rounded-xl border border-line bg-surface p-1 shadow-xl"
         >
-          <li v-for="a in ACTIONS" :key="a" role="none">
+          <li v-for="(a, i) in d.actions" :key="i" role="none">
             <button
               role="menuitem"
               class="w-full rounded-lg px-3 py-2 text-left text-xs text-fg transition-colors hover:bg-card"
-              @click="choose(a)"
+              @click="choose(i)"
             >{{ a }}</button>
           </li>
         </motion.ul>
       </AnimatePresence>
     </div>
-    <p class="text-xs text-muted">{{ last ?? 'chevron shares the pill with the primary action' }}</p>
+    <p class="text-xs text-muted">{{ hint }}</p>
   </div>
 </template>

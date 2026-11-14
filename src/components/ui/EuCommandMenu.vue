@@ -2,6 +2,7 @@
 import { computed, nextTick, ref, watch } from 'vue';
 import { AnimatePresence, motion } from 'motion-v';
 import { motionTransitions } from '../../lib/motion-tokens';
+import { useLocale } from '../../i18n/useLocale';
 import { cn } from '../../lib/utils';
 
 const props = defineProps<{ class?: string }>();
@@ -12,15 +13,50 @@ interface Item {
   category: string;
 }
 
-const ITEMS: Item[] = [
-  { label: 'Install via shadcn CLI', hint: 'npx shadcn add', category: 'Getting started' },
-  { label: 'Browse motion components', hint: '42 items', category: 'Catalog' },
-  { label: 'Browse feedback components', hint: '34 items', category: 'Catalog' },
-  { label: 'Theme tokens', hint: 'colors · radius · fonts', category: 'Styling' },
-  { label: 'Dark mode setup', hint: 'class strategy', category: 'Styling' },
-  { label: 'Framer Motion springs', hint: 'motion-tokens.ts', category: 'Motion' },
-  { label: 'Copy-paste ownership', hint: 'MIT license', category: 'Licensing' },
-];
+const DATA: Record<
+  'en' | 'zh-CN',
+  {
+    trigger: string;
+    placeholder: string;
+    searchAria: string;
+    empty: string;
+    items: Item[];
+  }
+> = {
+  en: {
+    trigger: 'Open command menu',
+    placeholder: 'Type a command or search…',
+    searchAria: 'Command search',
+    empty: 'No commands found.',
+    items: [
+      { label: 'Install via shadcn CLI', hint: 'npx shadcn add', category: 'Getting started' },
+      { label: 'Browse motion components', hint: '42 items', category: 'Catalog' },
+      { label: 'Browse feedback components', hint: '34 items', category: 'Catalog' },
+      { label: 'Theme tokens', hint: 'colors · radius · fonts', category: 'Styling' },
+      { label: 'Dark mode setup', hint: 'class strategy', category: 'Styling' },
+      { label: 'Framer Motion springs', hint: 'motion-tokens.ts', category: 'Motion' },
+      { label: 'Copy-paste ownership', hint: 'MIT license', category: 'Licensing' },
+    ],
+  },
+  'zh-CN': {
+    trigger: '打开命令菜单',
+    placeholder: '输入命令或搜索…',
+    searchAria: '命令搜索',
+    empty: '未找到匹配的命令。',
+    items: [
+      { label: '通过 shadcn CLI 安装', hint: 'npx shadcn add', category: '入门' },
+      { label: '浏览动效组件', hint: '42 项', category: '目录' },
+      { label: '浏览反馈组件', hint: '34 项', category: '目录' },
+      { label: '主题令牌', hint: '颜色 · 圆角 · 字体', category: '样式' },
+      { label: '深色模式设置', hint: 'class 策略', category: '样式' },
+      { label: 'Framer Motion 弹簧参数', hint: 'motion-tokens.ts', category: '动效' },
+      { label: '复制即拥有', hint: 'MIT 许可', category: '授权' },
+    ],
+  },
+};
+
+const { locale } = useLocale();
+const T = computed(() => DATA[locale.value]);
 
 const KEYS = ['↑', '↓', '⏎'];
 
@@ -40,7 +76,7 @@ function fuzzy(needle: string, text: string): boolean {
 
 const results = computed(() => {
   const q = query.value.trim().toLowerCase();
-  return ITEMS.filter((it) => fuzzy(q, `${it.label} ${it.category}`));
+  return T.value.items.filter((it) => fuzzy(q, `${it.label} ${it.category}`));
 });
 
 watch(query, () => {
@@ -73,7 +109,7 @@ function onKeyDown(e: KeyboardEvent) {
       class="flex w-full items-center justify-between rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-muted transition-colors hover:border-fg/40"
       @click="open = !open"
     >
-      <span>Open command menu</span>
+      <span>{{ T.trigger }}</span>
       <span class="flex gap-1">
         <kbd v-for="k in KEYS" :key="k" class="rounded border border-line bg-card px-1.5 text-[10px]">{{ k }}</kbd>
       </span>
@@ -92,8 +128,8 @@ function onKeyDown(e: KeyboardEvent) {
         <input
           ref="inputRef"
           v-model="query"
-          placeholder="Type a command or search…"
-          aria-label="Command search"
+          :placeholder="T.placeholder"
+          :aria-label="T.searchAria"
           class="w-full border-b border-line bg-transparent px-3.5 py-3 text-sm outline-none placeholder:text-muted/70"
           @keydown="onKeyDown"
         />
@@ -118,7 +154,7 @@ function onKeyDown(e: KeyboardEvent) {
               </span>
             </button>
           </li>
-          <li v-if="results.length === 0" class="px-3 py-6 text-center text-sm text-muted">No commands found.</li>
+          <li v-if="results.length === 0" class="px-3 py-6 text-center text-sm text-muted">{{ T.empty }}</li>
         </ul>
       </motion.div>
     </AnimatePresence>

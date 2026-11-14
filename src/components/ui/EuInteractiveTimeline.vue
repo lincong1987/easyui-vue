@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { onUnmounted, ref } from 'vue';
+import { computed, onUnmounted, ref } from 'vue';
 import { motion } from 'motion-v';
+import { useLocale } from '../../i18n/useLocale';
 import { CheckIcon, CopyIcon } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 
@@ -13,11 +14,36 @@ interface TimelineNode {
   hash: string;
 }
 
-const NODES: TimelineNode[] = [
-  { version: 'v0.9.0', state: 'done', note: 'Initial 30 components', hash: 'a1f03c9' },
-  { version: 'v1.0.0', state: 'active', note: 'Charts + gallery site', hash: 'be7712d' },
-  { version: 'v1.1.0', state: 'pending', note: 'Full catalog sweep', hash: '—' },
-];
+const DATA: Record<
+  'en' | 'zh-CN',
+  {
+    nodes: TimelineNode[];
+    inProgress: string;
+    copyCommit: string;
+  }
+> = {
+  en: {
+    nodes: [
+      { version: 'v0.9.0', state: 'done', note: 'Initial 30 components', hash: 'a1f03c9' },
+      { version: 'v1.0.0', state: 'active', note: 'Charts + gallery site', hash: 'be7712d' },
+      { version: 'v1.1.0', state: 'pending', note: 'Full catalog sweep', hash: '—' },
+    ],
+    inProgress: 'in progress',
+    copyCommit: 'Copy commit',
+  },
+  'zh-CN': {
+    nodes: [
+      { version: 'v0.9.0', state: 'done', note: '首批 30 个组件', hash: 'a1f03c9' },
+      { version: 'v1.0.0', state: 'active', note: '图表组件与展示站', hash: 'be7712d' },
+      { version: 'v1.1.0', state: 'pending', note: '补齐全量组件目录', hash: '—' },
+    ],
+    inProgress: '进行中',
+    copyCommit: '复制 commit',
+  },
+};
+
+const { locale } = useLocale();
+const ui = computed(() => DATA[locale.value]);
 
 const copied = ref<string | null>(null);
 let timer: number | undefined;
@@ -43,7 +69,7 @@ onUnmounted(() => window.clearTimeout(timer));
         :animate="{ height: '58%' }"
         :transition="{ duration: 1.1, ease: 'easeOut' }"
       />
-      <div v-for="n in NODES" :key="n.version" class="relative mb-5 last:mb-0">
+      <div v-for="n in ui.nodes" :key="n.version" class="relative mb-5 last:mb-0">
         <span
           :class="cn(
             'absolute -left-6 top-0.5 flex h-[18px] w-[18px] items-center justify-center rounded-full border-2',
@@ -63,14 +89,14 @@ onUnmounted(() => window.clearTimeout(timer));
         <div class="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface px-3.5 py-2.5">
           <div>
             <p class="text-sm font-medium">
-              {{ n.version }}<span v-if="n.state === 'active'" class="ml-2 text-[10px] font-normal text-muted">in progress</span>
+              {{ n.version }}<span v-if="n.state === 'active'" class="ml-2 text-[10px] font-normal text-muted">{{ ui.inProgress }}</span>
             </p>
             <p class="text-xs text-muted">{{ n.note }}</p>
           </div>
           <button
             v-if="n.hash !== '—'"
             class="flex items-center gap-1 rounded-lg border border-line px-2 py-1 font-mono text-[10px] text-muted transition-colors hover:text-fg"
-            :aria-label="`Copy commit ${n.hash}`"
+            :aria-label="`${ui.copyCommit} ${n.hash}`"
             @click="copy(n.hash)"
           >
             <CheckIcon v-if="copied === n.hash" :size="10" />

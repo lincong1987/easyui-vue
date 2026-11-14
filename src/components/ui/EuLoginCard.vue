@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { onUnmounted, ref } from 'vue';
+import { computed, onUnmounted, ref } from 'vue';
 import { motion } from 'motion-v';
 import { motionTransitions } from '../../lib/motion-tokens';
 import { GithubIcon } from '../../lib/icons';
 import { cn } from '../../lib/utils';
+import { useLocale } from '../../i18n/useLocale';
 import EuDrawCheckbox from './EuDrawCheckbox.vue';
 import EuLockInput from './EuLockInput.vue';
 
@@ -14,6 +15,45 @@ const props = defineProps<{
 const emit = defineEmits<{
   submit: [email: string];
 }>();
+
+const { locale } = useLocale();
+
+const DATA: Record<'en' | 'zh-CN', {
+  title: string;
+  subtitle: string;
+  email: string;
+  password: string;
+  remember: string;
+  forgot: string;
+  signIn: string;
+  signedIn: string;
+  orContinue: string;
+}> = {
+  en: {
+    title: 'Welcome back',
+    subtitle: 'Sign in to your EasyUI account.',
+    email: 'Email',
+    password: 'Password',
+    remember: 'Remember me',
+    forgot: 'Forgot password?',
+    signIn: 'Sign in',
+    signedIn: 'Signed in ✓',
+    orContinue: 'or continue with',
+  },
+  'zh-CN': {
+    title: '欢迎回来',
+    subtitle: '登录你的 EasyUI 账号。',
+    email: '邮箱',
+    password: '密码',
+    remember: '记住我',
+    forgot: '忘记密码？',
+    signIn: '登录',
+    signedIn: '已登录 ✓',
+    orContinue: '或使用以下方式继续',
+  },
+};
+
+const copy = computed(() => DATA[locale.value]);
 
 const email = ref('');
 const password = ref('');
@@ -40,12 +80,12 @@ onUnmounted(() => {
     :class="cn('w-full max-w-sm rounded-3xl border border-line bg-surface p-6 shadow-lg', props.class)"
     @submit.prevent="submit"
   >
-    <h3 class="text-lg font-semibold tracking-tight">Welcome back</h3>
-    <p class="mt-1 text-sm text-muted">Sign in to your EasyUI account.</p>
+    <h3 class="text-lg font-semibold tracking-tight">{{ copy.title }}</h3>
+    <p class="mt-1 text-sm text-muted">{{ copy.subtitle }}</p>
 
     <div class="mt-5 space-y-3.5">
       <div>
-        <label for="login-email" class="mb-1.5 block text-sm font-medium">Email</label>
+        <label for="login-email" class="mb-1.5 block text-sm font-medium">{{ copy.email }}</label>
         <input
           id="login-email"
           v-model="email"
@@ -56,13 +96,13 @@ onUnmounted(() => {
         />
       </div>
 
-      <EuLockInput label="Password" :value="password" @update:value="password = $event" />
+      <EuLockInput :label="copy.password" :value="password" @update:value="password = $event" />
     </div>
 
     <div class="mt-3.5 flex items-center justify-between">
-      <EuDrawCheckbox label="Remember me" />
+      <EuDrawCheckbox :label="copy.remember" />
       <button type="button" class="text-sm text-muted underline-offset-4 hover:text-fg hover:underline">
-        Forgot password?
+        {{ copy.forgot }}
       </button>
     </div>
 
@@ -75,19 +115,19 @@ onUnmounted(() => {
         state === 'done' ? 'bg-emerald-600 text-white' : 'bg-fg text-bg hover:opacity-90',
       )"
     >
-      <template v-if="state === 'idle'">Sign in</template>
+      <template v-if="state === 'idle'">{{ copy.signIn }}</template>
       <motion.span
         v-else-if="state === 'loading'"
         class="h-4 w-4 rounded-full border-2 border-current border-t-transparent"
         :animate="{ rotate: 360 }"
         :transition="{ duration: 0.7, repeat: Infinity, ease: 'linear' }"
       />
-      <template v-else>Signed in ✓</template>
+      <template v-else>{{ copy.signedIn }}</template>
     </motion.button>
 
     <div class="my-4 flex items-center gap-3 text-xs text-muted">
       <span class="h-px flex-1 bg-line" />
-      or continue with
+      {{ copy.orContinue }}
       <span class="h-px flex-1 bg-line" />
     </div>
 
