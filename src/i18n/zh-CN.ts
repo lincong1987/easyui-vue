@@ -3,7 +3,7 @@ import type { Dictionary } from './en';
 /** Simplified Chinese dictionary. */
 export const zhCN: Dictionary = {
   banner: {
-    text: 'EasyUI Vue 移植版 —— 基于 easyui.site 的 Vue 3 从零复刻 · 调研记录随任务目录交付',
+    text: '发布优惠：赞助 EasyUI，每月 49 美元',
     dismiss: '关闭横幅',
   },
   nav: {
@@ -17,15 +17,13 @@ export const zhCN: Dictionary = {
     language: '语言',
   },
   home: {
-    badge: '134 个组件 · 本 Vue 移植版已实现 {live} 个 · MIT',
     title1: '开源 Vue UI 组件库',
     title2: '动效组件全收录',
-    subtitle: '为 Tailwind 打造的可复制粘贴 Vue 3 组件：live 预览、TypeScript 源码、Motion（Framer）交互动效。',
+    subtitle: '为 Tailwind 打造的可复制粘贴 Vue 3 组件：live 预览、TypeScript 源码、Motion（Framer）交互。',
     browse: '浏览组件',
-    starsUpstream: '上游 290 星',
     featured: '精选组件',
-    featuredNote: '所有预览均由真实移植组件渲染。',
-    viewAll: '查看全部 134 个',
+    featuredNote: '所有预览均由真实组件渲染。',
+    viewAll: '查看全部组件',
   },
   directory: {
     eyebrow: '组件目录',
@@ -64,17 +62,18 @@ export const zhCN: Dictionary = {
     backToDirectory: '返回目录',
   },
   llms: {
-    title: 'EasyUI Vue 移植版 — llms.txt',
+    title: 'EasyUI Vue — llms.txt',
     intro:
-      '为 Vue 3、Tailwind CSS 与 Motion for Vue 打造的生产级动效 UI 组件。本移植版收录了上游全部 {count} 个组件，且全部以从零编写的 Vue 实现呈现。',
+      '为 Vue 3、Tailwind CSS 与 Motion for Vue 打造的生产级动效 UI 组件——{count} 个组件，全部以从零编写的 Vue 单文件组件实现。',
   },
   preview: {
     new: '新',
     cataloguedFromUpstream: '来自上游目录收录——本移植版未包含该实现。',
   },
   footer: {
-    tagline: '为现代界面打造的开源、用心组件',
-    portOf: 'Vue 3 移植自',
+    tagline: '开源、用心的组件，面向现代 Vue 界面',
+    builtBy: '© 2026 EasyUI Vue · Built by lincong',
+    portOf: 'easyui.site',
     upstreamRepo: '上游仓库',
   },
   categories: {

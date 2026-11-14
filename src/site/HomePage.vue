@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 import { motion } from 'motion-v';
 import { motionTransitions } from '../lib/motion-tokens';
-import { ArrowRightIcon, GithubIcon, SparklesIcon, StarIcon, ZapIcon } from '../lib/icons';
+import { ArrowRightIcon, GithubIcon, ZapIcon } from '../lib/icons';
 import { CATALOG, FEATURED } from '../lib/catalog';
 import { useLocale } from '../i18n/useLocale';
 import ComponentPreview from './ComponentPreview.vue';
@@ -10,7 +9,6 @@ import ComponentPreview from './ComponentPreview.vue';
 const { t } = useLocale();
 
 const bySlug = new Map(CATALOG.map((c) => [c.slug, c]));
-const implemented = computed(() => CATALOG.filter((c) => c.implemented).length);
 const featured = FEATURED.map((s) => bySlug.get(s)).filter((c): c is (typeof CATALOG)[number] => Boolean(c));
 </script>
 
@@ -22,10 +20,6 @@ const featured = FEATURED.map((s) => bySlug.get(s)).filter((c): c is (typeof CAT
         :animate="{ opacity: 1, y: 0 }"
         :transition="motionTransitions.easeSoft"
       >
-        <p class="mb-4 inline-flex items-center gap-1.5 rounded-full border border-line bg-card px-3 py-1 text-xs text-muted">
-          <SparklesIcon :size="12" />
-          {{ t.home.badge.replace('{live}', String(implemented)) }}
-        </p>
         <h1 class="mx-auto max-w-4xl text-4xl font-semibold leading-[1.06] tracking-[-0.03em] sm:text-6xl">
           {{ t.home.title1 }}
           <br />
@@ -55,9 +49,6 @@ const featured = FEATURED.map((s) => bySlug.get(s)).filter((c): c is (typeof CAT
 
         <div class="mt-8 flex items-center justify-center gap-6 text-xs text-muted">
           <span class="inline-flex items-center gap-1.5">
-            <StarIcon :size="13" /> {{ t.home.starsUpstream }}
-          </span>
-          <span class="inline-flex items-center gap-1.5">
             <ZapIcon :size="13" /> Vue 3 · Tailwind 4 · Motion for Vue
           </span>
         </div>
@@ -70,8 +61,7 @@ const featured = FEATURED.map((s) => bySlug.get(s)).filter((c): c is (typeof CAT
           <h2 class="text-lg font-semibold tracking-tight">{{ t.home.featured }}</h2>
           <p class="text-sm text-muted">{{ t.home.featuredNote }}</p>
         </div>
-        <a href="#/components" class="text-sm text-muted underline-offset-4 hover:text-fg hover:underline">{{ t.home.viewAll }}</a>
-      </div>
+        <a href="#/components" class="text-sm text-muted underline-offset-4 hover:text-fg hover:underline">{{ t.home.viewAll }}</a>      </div>
       <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         <ComponentPreview
           v-for="c in featured"

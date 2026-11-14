@@ -4,7 +4,6 @@ import { CATALOG } from '../lib/catalog';
 import { useLocale } from '../i18n/useLocale';
 import { getDemos } from './demos';
 import { ArrowUpRightIcon, PackageIcon } from '../lib/icons';
-import { cn } from '../lib/utils';
 
 const props = defineProps<{ slug: string }>();
 
@@ -27,14 +26,6 @@ const categoryLabel = computed(() =>
     <div class="mt-4 flex flex-wrap items-center gap-3">
       <h1 class="text-3xl font-semibold tracking-[-0.02em]">{{ entry.title }}</h1>
       <span class="rounded-full border border-line bg-card px-2.5 py-1 text-xs text-muted">{{ categoryLabel }}</span>
-      <span
-        :class="cn(
-          'rounded-full px-2.5 py-1 text-xs font-medium',
-          entry.implemented ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'border border-dashed border-line text-muted',
-        )"
-      >
-        {{ entry.implemented ? t.detail.implemented : t.detail.cataloguedOnly }}
-      </span>
     </div>
     <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted">{{ description }}</p>
 

@@ -1,7 +1,7 @@
 /** English dictionary — the key structure is the source of truth for all locales. */
 export const en = {
   banner: {
-    text: 'EasyUI Vue port — a from-scratch Vue 3 replica of easyui.site · research notes ship with the task directory',
+    text: 'Launch offer: Sponsor EasyUI for $49 / month',
     dismiss: 'Dismiss banner',
   },
   nav: {
@@ -15,16 +15,14 @@ export const en = {
     language: 'Language',
   },
   home: {
-    badge: '134 components · {live} live in this Vue port · MIT',
     title1: 'Open-Source Vue UI Library',
     title2: 'with Animated Components',
     subtitle:
       'Copy and paste Vue 3 components for Tailwind, with live previews, TypeScript source, and Motion (Framer) interactions.',
     browse: 'Browse components',
-    starsUpstream: '290 stars upstream',
     featured: 'Featured components',
     featuredNote: 'Live previews rendered by the real ported components.',
-    viewAll: 'View all 134',
+    viewAll: 'View all components',
   },
   directory: {
     eyebrow: 'Directory',
@@ -65,17 +63,18 @@ export const en = {
     backToDirectory: 'Back to directory',
   },
   llms: {
-    title: 'EasyUI Vue Port — llms.txt',
+    title: 'EasyUI Vue — llms.txt',
     intro:
-      'Production-ready, beautifully crafted animated UI components built with Vue 3, Tailwind CSS, and Motion for Vue. This port catalogues all {count} upstream components; all of them are implemented here as live, from-scratch Vue implementations.',
+      'Production-ready, beautifully crafted animated UI components built with Vue 3, Tailwind CSS, and Motion for Vue — {count} components, all implemented as live, from-scratch Vue single-file components.',
   },
   preview: {
     new: 'NEW',
     cataloguedFromUpstream: 'Catalogued from upstream — implementation not included in this port.',
   },
   footer: {
-    tagline: 'Open-source, thoughtful components for modern interfaces',
-    portOf: 'Vue 3 port of',
+    tagline: 'Open-source, thoughtful components for modern Vue interfaces',
+    builtBy: '© 2026 EasyUI Vue · Built by lincong',
+    portOf: 'easyui.site',
     upstreamRepo: 'upstream repository',
   },
   categories: {
