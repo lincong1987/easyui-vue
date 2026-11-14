@@ -1,0 +1,26 @@
+{
+  "name": "easyui-vue",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview --port 5457 --strictPort --host 127.0.0.1"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "motion-v": "^2.12.0",
+    "tailwind-merge": "^3.3.0",
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.0",
+    "@vitejs/plugin-vue": "^6.0.0",
+    "tailwindcss": "^4.1.0",
+    "typescript": "^5.7.0",
+    "vite": "^7.0.0",
+    "vue-tsc": "^2.2.0"
+  },
+  "description": "Open-source Vue 3 animated UI components \u2014 Vue port of EasyUI (Tailwind CSS + Motion for Vue)"
+}
